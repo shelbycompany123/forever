@@ -1,349 +1,479 @@
-import { useEffect, useState } from 'react'
-import axios from 'axios';
-import { backendUrl } from '../App';
-import { TrendingUp, Users, ShoppingCart, DollarSign, Package, Eye, Calendar, Activity } from 'lucide-react';
+import { useEffect, useState } from "react";
+import axios from "axios";
+import { backendUrl } from "../App";
+import {
+  TrendingUp,
+  Users,
+  ShoppingCart,
+  DollarSign,
+  Package,
+  Eye,
+  Calendar,
+  Activity,
+  ArrowUpRight,
+  ArrowDownRight,
+} from "lucide-react";
 
-const Overview = () => {
+const Overview = ({ token }) => {
+  const [totalRevenue, setTotalRevenue] = useState(0);
+  const [totalUsers, setTotalUsers] = useState(0);
+  const [totalOrders, setTotalOrders] = useState(0);
+  const [totalProducts, setTotalProducts] = useState(0);
+  const [recentOrders, setRecentOrders] = useState([]);
+  const [topProducts, setTopProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [monthlyStats, setMonthlyStats] = useState({
+    thisMonth: { orders: 0, revenue: 0, users: 0 },
+    lastMonth: { orders: 0, revenue: 0, users: 0 },
+  });
 
-    const [totalRevenue, setTotalRevenue] = useState(0);
-    const [totalUsers, setTotalUsers] = useState(0);
-    const [totalOrders, setTotalOrders] = useState(0);
-    const [totalProducts, setTotalProducts] = useState(0);
-    const [recentOrders, setRecentOrders] = useState([]);
-    const [topProducts, setTopProducts] = useState([]);
-    const [monthlyStats, setMonthlyStats] = useState({
-        thisMonth: { orders: 0, revenue: 0, users: 0 },
-        lastMonth: { orders: 0, revenue: 0, users: 0 }
-    });
-
-    useEffect(() => {
+  useEffect(() => {
+    const fetchAllData = async () => {
+      setLoading(true);
+      try {
         // Lấy tổng doanh thu
         const fetchRevenue = async () => {
-            try {
-                const response = await axios.get(backendUrl + "/api/overview/getrevenue")
-                if (response.data.success) {
-                    setTotalRevenue(response.data.totalRevenue);
-                }
-            } catch (error) {
-                console.log(error.message);
+          try {
+            const response = await axios.get(
+              backendUrl + "/api/overview/getrevenue"
+            );
+            if (response.data.success) {
+              setTotalRevenue(response.data.totalRevenue);
             }
-        }
+          } catch (error) {
+            console.log(error.message);
+          }
+        };
 
         // Lấy tổng số người dùng
         const fetchUsers = async () => {
-            try {
-                const response = await axios.get(backendUrl + "/api/overview/getusers");
-                if (response.data.success) {
-                    setTotalUsers(response.data.totalUsers);
-                }
-            } catch (error) {
-                console.log(error.message);
+          try {
+            const response = await axios.get(
+              backendUrl + "/api/overview/getusers"
+            );
+            if (response.data.success) {
+              setTotalUsers(response.data.totalUsers);
             }
-        }
+          } catch (error) {
+            console.log(error.message);
+          }
+        };
 
         // Lấy tổng số đơn hàng
         const fetchOrders = async () => {
-            try {
-                const response = await axios.get(backendUrl + "/api/overview/getorders")
-                if (response.data.success) {
-                    setTotalOrders(response.data.totalOrders);
-                }
-            } catch (error) {
-                console.log(error.message);
+          try {
+            const response = await axios.get(
+              backendUrl + "/api/overview/getorders"
+            );
+            if (response.data.success) {
+              setTotalOrders(response.data.totalOrders);
             }
-        }
+          } catch (error) {
+            console.log(error.message);
+          }
+        };
 
         // Lấy tổng số sản phẩm
         const fetchProducts = async () => {
-            try {
-                const response = await axios.get(backendUrl + "/api/product/list")
-                if (response.data.success) {
-                    setTotalProducts(response.data.products.length);
-                    // Lấy top 5 sản phẩm (giả lập dựa trên tên)
-                    setTopProducts(response.data.products.slice(0, 5));
-                }
-            } catch (error) {
-                console.log(error.message);
+          try {
+            const response = await axios.get(backendUrl + "/api/product/list");
+            if (response.data.success) {
+              setTotalProducts(response.data.products.length);
             }
-        }
+          } catch (error) {
+            console.log(error.message);
+          }
+        };
 
-        // Lấy đơn hàng gần đây (giả lập)
+        // Lấy sản phẩm nổi bật dựa trên số lượng bán
+        const fetchTopSellingProducts = async () => {
+          try {
+            const response = await axios.get(
+              backendUrl + "/api/overview/top-selling-products"
+            );
+            if (response.data.success) {
+              setTopProducts(response.data.topSellingProducts);
+            }
+          } catch (error) {
+            console.log(error.message);
+          }
+        };
+
+        // Lấy đơn hàng gần đây từ API
         const fetchRecentOrders = async () => {
-            try {
-                // Tạo dữ liệu giả lập cho đơn hàng gần đây
-                const mockRecentOrders = [
-                    { id: 1, customer: "Nguyễn Văn A", amount: 250000, status: "Đã giao", date: "2024-01-15" },
-                    { id: 2, customer: "Trần Thị B", amount: 180000, status: "Đang giao", date: "2024-01-14" },
-                    { id: 3, customer: "Lê Văn C", amount: 320000, status: "Đã xác nhận", date: "2024-01-14" },
-                    { id: 4, customer: "Phạm Thị D", amount: 150000, status: "Chờ xác nhận", date: "2024-01-13" },
-                    { id: 5, customer: "Hoàng Văn E", amount: 420000, status: "Đã giao", date: "2024-01-13" }
-                ];
-                setRecentOrders(mockRecentOrders);
-            } catch (error) {
-                console.log(error.message);
-            }
-        }
-
-        // Tạo thống kê tháng (giả lập)
-        const generateMonthlyStats = () => {
-            setMonthlyStats({
-                thisMonth: {
-                    orders: Math.floor(totalOrders * 0.3),
-                    revenue: Math.floor(totalRevenue * 0.25),
-                    users: Math.floor(totalUsers * 0.15)
-                },
-                lastMonth: {
-                    orders: Math.floor(totalOrders * 0.25),
-                    revenue: Math.floor(totalRevenue * 0.20),
-                    users: Math.floor(totalUsers * 0.12)
-                }
+          try {
+            const response = await axios.get(backendUrl + "/api/order/list", {
+              headers: { token },
             });
-        }
+            if (response.data.success) {
+              const sortedOrders = response.data.orders
+                .sort((a, b) => b.date - a.date)
+                .slice(0, 5);
 
-        fetchRevenue();
-        fetchUsers();
-        fetchOrders();
-        fetchProducts();
-        fetchRecentOrders();
+              const ordersInfo = sortedOrders.map((order) => ({
+                id: order._id,
+                items: order.items,
+                amount: order.amount,
+                status: order.status,
+                date: new Date(order.date).toISOString().split("T")[0],
+                payment: order.payment,
+                paymentMethod: order.paymentMethod,
+              }));
 
-        // Delay để đảm bảo dữ liệu đã load xong
-        setTimeout(generateMonthlyStats, 1000);
-    }, [])
+              setRecentOrders(ordersInfo);
+            }
+          } catch (error) {
+            console.log(error.message);
+          }
+        };
 
-    const formatCurrency = (amount) => {
-      const formatted = amount.toLocaleString('vi-VN');
-      return formatted.replace(/\./g, ',') + ' VNĐ';
+        // Chạy tất cả các API calls song song
+        await Promise.all([
+          fetchRevenue(),
+          fetchUsers(),
+          fetchOrders(),
+          fetchProducts(),
+          fetchTopSellingProducts(),
+          fetchRecentOrders(),
+        ]);
+
+        // Tạo thống kê tháng sau khi có dữ liệu
+        setMonthlyStats({
+          thisMonth: {
+            orders: Math.floor(totalOrders * 0.3),
+            revenue: Math.floor(totalRevenue * 0.25),
+            users: Math.floor(totalUsers * 0.15),
+          },
+          lastMonth: {
+            orders: Math.floor(totalOrders * 0.25),
+            revenue: Math.floor(totalRevenue * 0.2),
+            users: Math.floor(totalUsers * 0.12),
+          },
+        });
+      } catch (error) {
+        console.log("Error fetching data:", error);
+      } finally {
+        setLoading(false);
+      }
     };
 
-    const getStatusColor = (status) => {
-        switch (status) {
-            case 'Đã giao': return 'bg-green-100 text-green-800';
-            case 'Đang giao': return 'bg-blue-100 text-blue-800';
-            case 'Đã xác nhận': return 'bg-yellow-100 text-yellow-800';
-            case 'Chờ xác nhận': return 'bg-gray-100 text-gray-800';
-            default: return 'bg-gray-100 text-gray-800';
-        }
-    };
+    fetchAllData();
+  }, [token]);
 
-    const calculateGrowth = (current, previous) => {
-        if (previous === 0) return 0;
-        return ((current - previous) / previous * 100).toFixed(1);
-    };
+  const formatCurrency = (amount) => {
+    const formatted = amount?.toLocaleString("vi-VN");
+    return formatted?.replace(/\./g, ",") + " VNĐ";
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "da_giao":
+        return "status-success";
+      case "dang_giao":
+        return "status-processing";
+      case "da_xac_nhan":
+        return "status-pending";
+      case "chua_xac_nhan":
+        return "status-pending";
+      case "da_huy":
+        return "status-cancelled";
+      default:
+        return "status-pending";
+    }
+  };
+
+  const getStatusText = (status) => {
+    switch (status) {
+      case "da_giao":
+        return "Đã giao";
+      case "dang_giao":
+        return "Đang giao";
+      case "da_xac_nhan":
+        return "Đã xác nhận";
+      case "chua_xac_nhan":
+        return "Chờ xác nhận";
+      case "da_huy":
+        return "Đã hủy";
+      default:
+        return "Chờ xác nhận";
+    }
+  };
+
+  const calculateGrowth = (current, previous) => {
+    if (previous === 0) return 0;
+    return (((current - previous) / previous) * 100).toFixed(1);
+  };
+
+  const getGrowthIcon = (current, previous) => {
+    const growth = calculateGrowth(current, previous);
+    if (growth > 0) {
+      return <ArrowUpRight size={16} className="text-green-600" />;
+    } else if (growth < 0) {
+      return <ArrowDownRight size={16} className="text-red-600" />;
+    }
+    return null;
+  };
 
   return (
-    <div className='p-6 space-y-6'>
-      {/* Header */}
-      <div className='bg-white rounded-lg p-6 shadow-lg mb-6'>
-        <div>
-          <h1 className='text-3xl font-bold text-gray-900'>Dashboard Overview</h1>
-          <p className='text-gray-600 mt-1'>Chào mừng trở lại! Đây là tổng quan về cửa hàng của bạn.</p>
+    <div className="space-y-6">
+      {loading ? (
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black"></div>
         </div>
-        <div className='flex items-center space-x-2 text-sm text-gray-500'>
-          <Calendar className='w-4 h-4' />
-          <span>{new Date().toLocaleDateString('vi-VN')}</span>
-        </div>
-      </div>
-
-      {/* Main Stats Cards */}
-      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6'>
-        <div className='bg-gradient-to-r from-blue-500 to-blue-600 p-6 rounded-xl text-white shadow-lg'>
-          <div className='flex items-center justify-between'>
-            <div>
-              <p className='text-blue-100 text-sm font-medium'>Tổng đơn hàng</p>
-              <p className='text-3xl font-bold mt-2'>{totalOrders}</p>
-              <div className='flex items-center mt-2'>
-                <TrendingUp className='w-4 h-4 mr-1' />
-                <span className='text-sm'>+{calculateGrowth(monthlyStats.thisMonth.orders, monthlyStats.lastMonth.orders)}%</span>
-              </div>
-            </div>
-            <ShoppingCart className='w-12 h-12 text-blue-200' />
-          </div>
-        </div>
-
-        <div className='bg-gradient-to-r from-green-500 to-green-600 p-6 rounded-xl text-white shadow-lg'>
-          <div className='flex items-center justify-between'>
-            <div>
-              <p className='text-green-100 text-sm font-medium'>Tổng người dùng</p>
-              <p className='text-3xl font-bold mt-2'>{totalUsers}</p>
-              <div className='flex items-center mt-2'>
-                <TrendingUp className='w-4 h-4 mr-1' />
-                <span className='text-sm'>+{calculateGrowth(monthlyStats.thisMonth.users, monthlyStats.lastMonth.users)}%</span>
-              </div>
-            </div>
-            <Users className='w-12 h-12 text-green-200' />
-          </div>
-        </div>
-
-        <div className='bg-gradient-to-r from-purple-500 to-purple-600 p-6 rounded-xl text-white shadow-lg'>
-          <div className='flex items-center justify-between'>
-            <div>
-              <p className='text-purple-100 text-sm font-medium'>Tổng sản phẩm</p>
-              <p className='text-3xl font-bold mt-2'>{totalProducts}</p>
-              <div className='flex items-center mt-2'>
-                <Activity className='w-4 h-4 mr-1' />
-                <span className='text-sm'>Đang hoạt động</span>
-              </div>
-            </div>
-            <Package className='w-12 h-12 text-purple-200' />
-          </div>
-        </div>
-
-        <div className='bg-gradient-to-r from-yellow-500 to-orange-500 p-6 rounded-xl text-white shadow-lg'>
-          <div className='flex items-center justify-between'>
-            <div>
-              <p className='text-yellow-100 text-sm font-medium'>Tổng doanh thu</p>
-              <p className='text-2xl font-bold mt-2'>{formatCurrency(totalRevenue)}</p>
-              <div className='flex items-center mt-2'>
-                <TrendingUp className='w-4 h-4 mr-1' />
-                <span className='text-sm'>+{calculateGrowth(monthlyStats.thisMonth.revenue, monthlyStats.lastMonth.revenue)}%</span>
-              </div>
-            </div>
-            <DollarSign className='w-12 h-12 text-yellow-200' />
-          </div>
-        </div>
-      </div>
-
-      {/* Secondary Stats & Charts */}
-      <div className='grid grid-cols-1 lg:grid-cols-3 gap-6'>
-        {/* Monthly Comparison */}
-        <div className='bg-white p-6 rounded-xl shadow-lg'>
-          <h3 className='text-lg font-semibold text-gray-900 mb-4'>So sánh tháng</h3>
-          <div className='space-y-4'>
-            <div className='flex justify-between items-center'>
-              <span className='text-gray-600'>Đơn hàng tháng này</span>
-              <span className='font-semibold'>{monthlyStats.thisMonth.orders}</span>
-            </div>
-            <div className='flex justify-between items-center'>
-              <span className='text-gray-600'>Đơn hàng tháng trước</span>
-              <span className='font-semibold'>{monthlyStats.lastMonth.orders}</span>
-            </div>
-            <div className='border-t pt-2'>
-              <div className='flex justify-between items-center'>
-                <span className='text-gray-600'>Tăng trưởng</span>
-                <span className='font-semibold text-green-600'>
-                  +{calculateGrowth(monthlyStats.thisMonth.orders, monthlyStats.lastMonth.orders)}%
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Quick Actions */}
-        <div className='bg-white p-6 rounded-xl shadow-lg'>
-          <h3 className='text-lg font-semibold text-gray-900 mb-4'>Thao tác nhanh</h3>
-          <div className='space-y-3'>
-            <button className='w-full bg-blue-50 hover:bg-blue-100 text-blue-700 p-3 rounded-lg text-left transition-colors'>
-              <div className='flex items-center'>
-                <Package className='w-5 h-5 mr-3' />
-                <span>Thêm sản phẩm mới</span>
-              </div>
-            </button>
-            <button className='w-full bg-green-50 hover:bg-green-100 text-green-700 p-3 rounded-lg text-left transition-colors'>
-              <div className='flex items-center'>
-                <Eye className='w-5 h-5 mr-3' />
-                <span>Xem đơn hàng</span>
-              </div>
-            </button>
-            <button className='w-full bg-purple-50 hover:bg-purple-100 text-purple-700 p-3 rounded-lg text-left transition-colors'>
-              <div className='flex items-center'>
-                <Users className='w-5 h-5 mr-3' />
-                <span>Quản lý khách hàng</span>
-              </div>
-            </button>
-          </div>
-        </div>
-
-        {/* System Status */}
-        <div className='bg-white p-6 rounded-xl shadow-lg'>
-          <h3 className='text-lg font-semibold text-gray-900 mb-4'>Trạng thái hệ thống</h3>
-          <div className='space-y-3'>
-            <div className='flex items-center justify-between'>
-              <span className='text-gray-600'>Server</span>
-              <span className='px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium'>
-                Hoạt động
-              </span>
-            </div>
-            <div className='flex items-center justify-between'>
-              <span className='text-gray-600'>Database</span>
-              <span className='px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium'>
-                Kết nối
-              </span>
-            </div>
-            <div className='flex items-center justify-between'>
-              <span className='text-gray-600'>Cloudinary</span>
-              <span className='px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium'>
-                Sẵn sàng
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Recent Orders & Top Products */}
-      <div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
-        {/* Recent Orders */}
-        <div className='bg-white p-6 rounded-xl shadow-lg'>
-          <h3 className='text-lg font-semibold text-gray-900 mb-4'>Đơn hàng gần đây</h3>
-          <div className='space-y-3'>
-            {recentOrders.map((order) => (
-              <div key={order.id} className='flex items-center justify-between p-3 bg-gray-50 rounded-lg'>
+      ) : (
+        <>
+          {/* Header */}
+          <div className="card">
+            <div className="card-body">
+              <div className="flex justify-between items-start">
                 <div>
-                  <p className='font-medium text-gray-900'>{order.customer}</p>
-                  <p className='text-sm text-gray-600'>{order.date}</p>
+                  <h1 className="text-3xl font-bold text-black">
+                    Dashboard Overview
+                  </h1>
+                  <p className="text-gray-600 mt-1">
+                    Chào mừng trở lại! Đây là tổng quan về cửa hàng của bạn.
+                  </p>
                 </div>
-                <div className='text-right'>
-                  <p className='font-semibold text-gray-900'>{formatCurrency(order.amount)}</p>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
-                    {order.status}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Top Products */}
-        <div className='bg-white p-6 rounded-xl shadow-lg'>
-          <h3 className='text-lg font-semibold text-gray-900 mb-4'>Sản phẩm hàng đầu</h3>
-          <div className='space-y-3'>
-            {topProducts.map((product, index) => (
-              <div key={product._id} className='flex items-center p-3 bg-gray-50 rounded-lg'>
-                <div className='w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center text-white font-bold mr-4'>
-                  #{index + 1}
-                </div>
-                <div className='flex-1'>
-                  <p className='font-medium text-gray-900 truncate'>{product.name}</p>
-                  <p className='text-sm text-gray-600'>{product.category?.name} || Không có danh mục</p>
-                </div>
-                <div className='text-right'>
-                  <p className='font-semibold text-gray-900'>{formatCurrency(product.new_price)}</p>
-                  <p className='text-sm text-gray-600'>Còn lại: {Math.floor(Math.random() * 50) + 10}</p>
+                <div className="flex items-center space-x-2 text-sm text-gray-500">
+                  <Calendar className="w-4 h-4" />
+                  <span>{new Date().toLocaleDateString("vi-VN")}</span>
                 </div>
               </div>
-            ))}
+            </div>
           </div>
-        </div>
-      </div>
 
-      {/* Footer Stats */}
-      <div className='bg-gradient-to-r from-gray-900 to-gray-800 p-6 rounded-xl text-white'>
-        <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
-          <div className='text-center'>
-            <p className='text-3xl font-bold'>{totalProducts}</p>
-            <p className='text-gray-300 mt-1'>Sản phẩm đang bán</p>
+          {/* Main Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="card hover:shadow-md transition-shadow">
+              <div className="card-body">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-gray-600 text-sm font-medium">
+                      Tổng đơn hàng
+                    </p>
+                    <p className="text-3xl font-bold text-black mt-2">
+                      {totalOrders}
+                    </p>
+                    <div className="flex items-center mt-2">
+                      {getGrowthIcon(
+                        monthlyStats.thisMonth.orders,
+                        monthlyStats.lastMonth.orders
+                      )}
+                      <span className="text-sm text-gray-600 ml-1">
+                        {calculateGrowth(
+                          monthlyStats.thisMonth.orders,
+                          monthlyStats.lastMonth.orders
+                        )}
+                        % so với tháng trước
+                      </span>
+                    </div>
+                  </div>
+                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                    <ShoppingCart className="w-6 h-6 text-black" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="card hover:shadow-md transition-shadow">
+              <div className="card-body">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-gray-600 text-sm font-medium">
+                      Tổng người dùng
+                    </p>
+                    <p className="text-3xl font-bold text-black mt-2">
+                      {totalUsers}
+                    </p>
+                    <div className="flex items-center mt-2">
+                      {getGrowthIcon(
+                        monthlyStats.thisMonth.users,
+                        monthlyStats.lastMonth.users
+                      )}
+                      <span className="text-sm text-gray-600 ml-1">
+                        {calculateGrowth(
+                          monthlyStats.thisMonth.users,
+                          monthlyStats.lastMonth.users
+                        )}
+                        % so với tháng trước
+                      </span>
+                    </div>
+                  </div>
+                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                    <Users className="w-6 h-6 text-black" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="card hover:shadow-md transition-shadow">
+              <div className="card-body">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-gray-600 text-sm font-medium">
+                      Tổng sản phẩm
+                    </p>
+                    <p className="text-3xl font-bold text-black mt-2">
+                      {totalProducts}
+                    </p>
+                    <div className="flex items-center mt-2">
+                      <Activity className="w-4 h-4 text-gray-600" />
+                      <span className="text-sm text-gray-600 ml-1">
+                        Đang hoạt động
+                      </span>
+                    </div>
+                  </div>
+                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                    <Package className="w-6 h-6 text-black" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="card hover:shadow-md transition-shadow">
+              <div className="card-body">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-gray-600 text-sm font-medium">
+                      Tổng doanh thu
+                    </p>
+                    <p className="text-2xl font-bold text-black mt-2">
+                      {formatCurrency(totalRevenue)}
+                    </p>
+                    <div className="flex items-center mt-2">
+                      {getGrowthIcon(
+                        monthlyStats.thisMonth.revenue,
+                        monthlyStats.lastMonth.revenue
+                      )}
+                      <span className="text-sm text-gray-600 ml-1">
+                        {calculateGrowth(
+                          monthlyStats.thisMonth.revenue,
+                          monthlyStats.lastMonth.revenue
+                        )}
+                        % so với tháng trước
+                      </span>
+                    </div>
+                  </div>
+                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                    <DollarSign className="w-6 h-6 text-black" />
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-          <div className='text-center'>
-            <p className='text-3xl font-bold'>{Math.floor(totalOrders * 0.85)}</p>
-            <p className='text-gray-300 mt-1'>Đơn hàng thành công</p>
+
+          {/* Recent Orders and Top Products */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Recent Orders */}
+            <div className="card">
+              <div className="card-header">
+                <h3 className="text-lg font-semibold text-black">
+                  Đơn hàng gần đây
+                </h3>
+              </div>
+              <div className="card-body">
+                <div className="space-y-4">
+                  {recentOrders.length > 0 ? (
+                    recentOrders.map((order) => (
+                      <div
+                        key={order.id}
+                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                      >
+                        <div className="flex items-center space-x-3">
+                          <div className="avatar-group -space-x-6">
+                            {order.items.map((item) => (
+                              <div className="avatar">
+                                <div className="w-10 rounded-full">
+                                  <img src={item.image[0]} alt="order" />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                          <div>
+                            <p className="font-medium text-black">
+                              {formatCurrency(order.amount)}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              {order.date}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {order.paymentMethod} -{" "}
+                              {order.payment
+                                ? "Đã thanh toán"
+                                : "Chưa thanh toán"}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <span
+                            className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
+                              order.status
+                            )}`}
+                          >
+                            {getStatusText(order.status)}
+                          </span>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-8 text-gray-500">
+                      <ShoppingCart className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+                      <p>Chưa có đơn hàng nào</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Top Products */}
+            <div className="card">
+              <div className="card-header">
+                <h3 className="text-lg font-semibold text-black">
+                  Sản phẩm nổi bật
+                </h3>
+              </div>
+              <div className="card-body">
+                <div className="space-y-4">
+                  {topProducts.length > 0 ? (
+                    topProducts.map((product, index) => (
+                      <div
+                        key={product._id}
+                        className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg"
+                      >
+                        <div className="w-10 h-10 bg-black rounded-lg flex items-center justify-center">
+                          <span className="text-white font-semibold text-sm">
+                            #{index + 1}
+                          </span>
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-medium text-black">
+                            {product.name}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            {formatCurrency(product.new_price)}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm text-gray-600">
+                            Đã bán: {product.soldQuantity || 0}
+                          </p>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-8 text-gray-500">
+                      <Package className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+                      <p>Chưa có sản phẩm nào</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
-          <div className='text-center'>
-            <p className='text-3xl font-bold'>{Math.floor(totalUsers * 0.7)}</p>
-            <p className='text-gray-300 mt-1'>Khách hàng thân thiết</p>
-          </div>
-        </div>
-      </div>
+        </>
+      )}
     </div>
-  )
-}
+  );
+};
 
-export default Overview
+export default Overview;
