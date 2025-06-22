@@ -6,10 +6,7 @@ import toast from "react-hot-toast";
 import { Upload, Package, Tag, DollarSign, Save, X } from "lucide-react";
 
 const AddProducts = ({ token }) => {
-  const [image1, setImage1] = useState(false);
-  const [image2, setImage2] = useState(false);
-  const [image3, setImage3] = useState(false);
-  const [image4, setImage4] = useState(false);
+  const [images, setImages] = useState([]);
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -38,7 +35,7 @@ const AddProducts = ({ token }) => {
       return;
     }
 
-    if (!image1 && !image2 && !image3 && !image4) {
+    if (images.length === 0) {
       toast.error("Vui lòng tải lên ít nhất một hình ảnh");
       return;
     }
@@ -57,10 +54,11 @@ const AddProducts = ({ token }) => {
       formData.append("sizes", JSON.stringify(sizes));
       formData.append("sale", sale);
 
-      image1 && formData.append("image1", image1);
-      image2 && formData.append("image2", image2);
-      image3 && formData.append("image3", image3);
-      image4 && formData.append("image4", image4);
+      // Thêm tất cả ảnh vào mảng images
+      const validImages = images.filter((img) => img);
+      validImages.forEach((image) => {
+        formData.append("images", image);
+      });
 
       const response = await axios.post(
         backendUrl + "/api/product/add",
@@ -73,10 +71,7 @@ const AddProducts = ({ token }) => {
         // Reset form
         setName("");
         setDescription("");
-        setImage1(false);
-        setImage2(false);
-        setImage3(false);
-        setImage4(false);
+        setImages([]);
         setNewPrice("");
         setOldPrice("");
         setSizes({ S: 0, M: 0, L: 0, XL: 0, XXL: 0 });
@@ -138,23 +133,6 @@ const AddProducts = ({ token }) => {
     }));
   };
 
-  const clearImage = (imageNumber) => {
-    switch (imageNumber) {
-      case 1:
-        setImage1(false);
-        break;
-      case 2:
-        setImage2(false);
-        break;
-      case 3:
-        setImage3(false);
-        break;
-      case 4:
-        setImage4(false);
-        break;
-    }
-  };
-
   useEffect(() => {
     getListCategories();
     getListSubCategories();
@@ -203,23 +181,8 @@ const AddProducts = ({ token }) => {
                 Hình Ảnh Sản Phẩm
               </h4>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {[1, 2, 3, 4].map((num) => {
-                  const image =
-                    num === 1
-                      ? image1
-                      : num === 2
-                      ? image2
-                      : num === 3
-                      ? image3
-                      : image4;
-                  const setImage =
-                    num === 1
-                      ? setImage1
-                      : num === 2
-                      ? setImage2
-                      : num === 3
-                      ? setImage3
-                      : setImage4;
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => {
+                  const image = images[num - 1];
 
                   return (
                     <div key={num} className="relative">
@@ -242,7 +205,16 @@ const AddProducts = ({ token }) => {
                         </div>
                       </label>
                       <input
-                        onChange={(e) => setImage(e.target.files[0])}
+                        onChange={(e) => {
+                          if (e.target.files.length > 0) {
+                            const file = e.target.files[0];
+                            setImages((prev) => {
+                              const newImages = [...prev];
+                              newImages[num - 1] = file;
+                              return newImages;
+                            });
+                          }
+                        }}
                         type="file"
                         id={`image${num}`}
                         hidden
@@ -251,7 +223,15 @@ const AddProducts = ({ token }) => {
                       {image && (
                         <button
                           type="button"
-                          onClick={() => clearImage(num)}
+                          onClick={() => {
+                            setImages((prev) => {
+                              const newImages = [...prev];
+                              newImages[num - 1] = undefined;
+                              return newImages.filter(
+                                (img) => img !== undefined
+                              );
+                            });
+                          }}
                           className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
                         >
                           <X size={12} />

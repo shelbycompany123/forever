@@ -104,14 +104,27 @@ const UpdateProduct = ({ token }) => {
       newForm.append("bestseller", formData.bestseller);
       newForm.append("sizes", JSON.stringify(formData.sizes));
       newForm.append("sale", formData.sale);
-      newForm.append("currentImageCount", formData.image.length);
 
       // Append images - chỉ append những ảnh đã được thay đổi (File objects)
+      const newImages = [];
+      const currentImages = [];
+
       formData.image.forEach((img, index) => {
         if (img && typeof img !== "string") {
           // Đây là file mới được chọn
-          newForm.append(`image${index + 1}`, img);
+          newImages.push(img);
+        } else if (img && typeof img === "string") {
+          // Đây là ảnh hiện tại (URL)
+          currentImages.push(img);
         }
+      });
+
+      // Gửi thông tin về ảnh hiện tại
+      newForm.append("currentImageCount", currentImages.length);
+
+      // Gửi tất cả ảnh mới
+      newImages.forEach((image) => {
+        newForm.append("images", image);
       });
 
       const res = await axios.put(
@@ -294,8 +307,8 @@ const UpdateProduct = ({ token }) => {
                     </div>
                   ))}
 
-                {/* Nút thêm ảnh mới nếu chưa đủ 4 ảnh */}
-                {formData.image && formData.image.length < 4 && (
+                {/* Nút thêm ảnh mới nếu chưa đủ 10 ảnh */}
+                {formData.image && formData.image.length < 10 && (
                   <label htmlFor="addNewImg" className="cursor-pointer">
                     <div className="w-full h-24 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center hover:border-black transition-colors">
                       <div className="text-center">

@@ -16,14 +16,8 @@ const addProduct = async (req, res) => {
       sale,
     } = req.body;
 
-    const image1 = req.files.image1 && req.files.image1[0];
-    const image2 = req.files.image2 && req.files.image2[0];
-    const image3 = req.files.image3 && req.files.image3[0];
-    const image4 = req.files.image4 && req.files.image4[0];
-
-    const images = [image1, image2, image3, image4].filter(
-      (item) => item !== undefined
-    );
+    // Xử lý ảnh từ mảng files
+    const images = req.files || [];
 
     const imagesUrl = await Promise.all(
       images.map(async (item) => {
@@ -166,31 +160,28 @@ const updateProduct = async (req, res) => {
       }
     }
 
-    if (req.files) {
-      const image1 = req.files.image1 && req.files.image1[0];
-      const image2 = req.files.image2 && req.files.image2[0];
-      const image3 = req.files.image3 && req.files.image3[0];
-      const image4 = req.files.image4 && req.files.image4[0];
-
-      const newImages = [image1, image2, image3, image4];
-
-      // Upload ảnh mới lên Cloudinary và cập nhật vào mảng
-      for (let i = 0; i < newImages.length; i++) {
-        if (newImages[i]) {
+    if (req.files && req.files.length > 0) {
+      // Upload tất cả ảnh mới lên Cloudinary
+      const newImageUrls = await Promise.all(
+        req.files.map(async (file) => {
           try {
-            let result = await cloudinary.uploader.upload(newImages[i].path, {
+            let result = await cloudinary.uploader.upload(file.path, {
               resource_type: "image",
             });
-            // Nếu đây là ảnh thêm mới (index >= độ dài mảng hiện tại)
-            if (i >= updatedImageUrls.length) {
-              updatedImageUrls.push(result.secure_url);
-            } else {
-              updatedImageUrls[i] = result.secure_url;
-            }
+            return result.secure_url;
           } catch (uploadError) {
-            console.log(`Error uploading image ${i + 1}:`, uploadError);
+            console.log("Error uploading image:", uploadError);
+            return null;
           }
-        }
+        })
+      );
+
+      // Lọc bỏ các ảnh upload thất bại
+      const validNewImages = newImageUrls.filter((url) => url !== null);
+
+      // Thêm ảnh mới vào cuối mảng ảnh hiện tại
+      if (validNewImages.length > 0) {
+        updatedImageUrls = [...updatedImageUrls, ...validNewImages];
       }
     }
 
