@@ -13,6 +13,16 @@ import {
   ArrowUpRight,
   ArrowDownRight,
 } from "lucide-react";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
 
 const Overview = ({ token }) => {
   const [totalRevenue, setTotalRevenue] = useState(0);
@@ -21,6 +31,7 @@ const Overview = ({ token }) => {
   const [totalProducts, setTotalProducts] = useState(0);
   const [recentOrders, setRecentOrders] = useState([]);
   const [topProducts, setTopProducts] = useState([]);
+  const [revenueData, setRevenueData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [monthlyStats, setMonthlyStats] = useState({
     thisMonth: { orders: 0, revenue: 0, users: 0 },
@@ -127,6 +138,20 @@ const Overview = ({ token }) => {
           }
         };
 
+        // Lấy dữ liệu thống kê doanh thu
+        const fetchRevenueStats = async () => {
+          try {
+            const response = await axios.get(
+              backendUrl + "/api/overview/revenue-stats"
+            );
+            if (response.data.success) {
+              setRevenueData(response.data.revenueData);
+            }
+          } catch (error) {
+            console.log("Error fetching revenue stats:", error.message);
+          }
+        };
+
         // Chạy tất cả các API calls song song
         await Promise.all([
           fetchRevenue(),
@@ -135,6 +160,7 @@ const Overview = ({ token }) => {
           fetchProducts(),
           fetchTopSellingProducts(),
           fetchRecentOrders(),
+          fetchRevenueStats(),
         ]);
 
         // Tạo thống kê tháng sau khi có dữ liệu
@@ -239,6 +265,55 @@ const Overview = ({ token }) => {
                   <span>{new Date().toLocaleDateString("vi-VN")}</span>
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Revenue Chart */}
+          <div className="card">
+            <div className="card-header">
+              <h3 className="text-lg font-semibold text-black">
+                Phân Tích Doanh Thu (30 Ngày Gần Nhất)
+              </h3>
+            </div>
+            <div className="card-body h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart
+                  data={revenueData}
+                  margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis
+                    dataKey="date"
+                    tickFormatter={(tick) =>
+                      new Date(tick).toLocaleDateString("vi-VN", {
+                        day: "2-digit",
+                        month: "2-digit",
+                      })
+                    }
+                  />
+                  <YAxis
+                    tickFormatter={(tick) =>
+                      new Intl.NumberFormat("vi-VN").format(tick)
+                    }
+                  />
+                  <Tooltip
+                    formatter={(value, name) => [
+                      `${formatCurrency(value)}`,
+                      "Doanh thu",
+                    ]}
+                  />
+                  <Legend />
+                  <Line
+                    type="monotone"
+                    dataKey="revenue"
+                    stroke="#000000"
+                    strokeWidth={2}
+                    dot={{ r: 4 }}
+                    activeDot={{ r: 8 }}
+                    name="Doanh thu"
+                  />
+                </LineChart>
+              </ResponsiveContainer>
             </div>
           </div>
 

@@ -97,4 +97,46 @@ const getTopSellingProducts = async (req, res) => {
   }
 };
 
-export { getRevenue, getTotalUsers, getTotalOrders, getTopSellingProducts };
+const getRevenueStats = async (req, res) => {
+  try {
+    const today = new Date();
+    const thirtyDaysAgo = new Date(new Date().setDate(today.getDate() - 30));
+
+    // Lấy các đơn hàng đã giao trong 30 ngày qua
+    const orders = await orderModel.find({
+      status: "da_giao",
+      date: { $gte: thirtyDaysAgo.getTime() },
+    });
+
+    // Nhóm doanh thu theo ngày
+    const dailyRevenue = orders.reduce((acc, order) => {
+      const orderDate = new Date(order.date).toISOString().split("T")[0]; // Format YYYY-MM-DD
+      acc[orderDate] = (acc[orderDate] || 0) + order.amount;
+      return acc;
+    }, {});
+
+    // Tạo mảng dữ liệu cho 30 ngày, điền 0 cho những ngày không có doanh thu
+    const revenueData = [];
+    for (let i = 0; i < 30; i++) {
+      const date = new Date(new Date().setDate(today.getDate() - i));
+      const formattedDate = date.toISOString().split("T")[0];
+      revenueData.unshift({
+        date: formattedDate,
+        revenue: dailyRevenue[formattedDate] || 0,
+      });
+    }
+
+    res.json({ success: true, revenueData });
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, message: error.message });
+  }
+};
+
+export {
+  getRevenue,
+  getTotalUsers,
+  getTotalOrders,
+  getTopSellingProducts,
+  getRevenueStats,
+};
