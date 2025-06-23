@@ -31,10 +31,7 @@ const productSchema = new mongoose.Schema({
     ref: "Subcategory",
     required: true,
   },
-  // sizes: {
-  //     type: Array,
-  //     required: true
-  // },
+
   sizes: {
     S: { type: Number, default: 0 },
     M: { type: Number, default: 0 },
