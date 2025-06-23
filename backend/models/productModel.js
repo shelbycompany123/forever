@@ -46,6 +46,33 @@ const productSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   }, // New add
+  reorderPoint: {
+    type: Number,
+    default: 100,
+  },
+  stockHistory: [
+    {
+      type: {
+        type: String,
+        enum: ["in", "out"],
+        required: true,
+      },
+      quantity: {
+        type: Number,
+        required: true,
+      },
+      size: {
+        type: String,
+        enum: ["S", "M", "L", "XL", "XXL"],
+        required: true,
+      },
+      date: {
+        type: Date,
+        default: Date.now,
+      },
+      note: String,
+    },
+  ],
   date: {
     type: Number,
     required: true,

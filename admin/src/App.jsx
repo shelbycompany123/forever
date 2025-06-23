@@ -13,6 +13,7 @@ import UpdateProduct from "./Pages/UpdateProduct";
 import ListUser from "./Pages/ListUser";
 import UserDetail from "./Pages/UserDetail";
 import AddCategories from "./Pages/AddCategories";
+import Inventory from "./Pages/Inventory";
 
 export const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
@@ -70,6 +71,10 @@ const App = () => {
                   <Route
                     path="/category"
                     element={<AddCategories token={token} />}
+                  />
+                  <Route
+                    path="/inventory"
+                    element={<Inventory token={token} />}
                   />
                 </Routes>
               </div>

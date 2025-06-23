@@ -23,13 +23,28 @@ const placeOrder = async (req, res) => {
     const newOrder = new orderModel(orderData);
     await newOrder.save();
 
-    const orderDetails = await orderModel.findById(newOrder._id);
-
-    for (let i = 0; i < orderDetails.items.length; i++) {
-      await productModel.findByIdAndUpdate(orderDetails.items[i]._id, {
-        $inc: { [`sizes.${orderDetails.items[i].size}`]: -1 },
-      });
+    // Giảm kho và thêm lịch sử kho
+    for (const item of items) {
+      const product = await productModel.findById(item._id);
+      if (product) {
+        if (product.sizes[item.size] < item.quantity) {
+          await orderModel.findByIdAndDelete(newOrder._id); // Xóa đơn hàng nếu không đủ hàng
+          return res.json({
+            success: false,
+            message: `Sản phẩm ${item.name} không đủ hàng`,
+          });
+        }
+        product.sizes[item.size] -= item.quantity;
+        product.stockHistory.push({
+          type: "out",
+          quantity: item.quantity,
+          size: item.size,
+          note: `Bán hàng - Đơn #${newOrder._id.toString().slice(-6)}`,
+        });
+        await product.save();
+      }
     }
+
     await userModel.findByIdAndUpdate(userId, { cartData: {} });
 
     res.json({ success: true, message: "Order Placed" });
@@ -159,10 +174,20 @@ const updateStatus = async (req, res) => {
         payment: false,
         date: Date.now(),
       });
-      for (let i = 0; i < orderDetails.items.length; i++) {
-        await productModel.findByIdAndUpdate(orderDetails.items[i]._id, {
-          $inc: { [`sizes.${orderDetails.items[i].size}`]: 1 },
-        });
+
+      // Hoàn trả hàng vào kho
+      for (const item of orderDetails.items) {
+        const product = await productModel.findById(item._id);
+        if (product) {
+          product.sizes[item.size] += item.quantity;
+          product.stockHistory.push({
+            type: "in",
+            quantity: item.quantity,
+            size: item.size,
+            note: `Hủy đơn hàng - Đơn #${orderId.slice(-6)}`,
+          });
+          await product.save();
+        }
       }
       res.json({ success: true, message: "Status Updated" });
     } else {

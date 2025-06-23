@@ -1,6 +1,6 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
-import { ListPlus, List, Package, Eye, User } from "lucide-react";
+import { ListPlus, List, Package, Eye, User, Warehouse } from "lucide-react";
 
 const Sidebar = () => {
   return (
@@ -84,6 +84,27 @@ const Sidebar = () => {
                 <p className="hidden md:block font-medium">Danh Sách</p>
               </NavLink>
             </div>
+          </div>
+
+          <div className="mb-4">
+            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 mb-2">
+              Quản lý
+            </h3>
+            <NavLink
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 group ${
+                  isActive
+                    ? "bg-black text-white shadow-md"
+                    : "text-gray-700 hover:bg-gray-100 hover:text-black"
+                }`
+              }
+              to="/inventory"
+            >
+              <div className="flex-shrink-0">
+                <Warehouse size={20} />
+              </div>
+              <p className="hidden md:block font-medium">Kho hàng</p>
+            </NavLink>
           </div>
 
           <div className="mb-4">
