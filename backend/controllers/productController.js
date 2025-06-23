@@ -28,21 +28,18 @@ const addProduct = async (req, res) => {
       })
     );
 
-    let parsedSizes;
-    try {
-      parsedSizes = typeof sizes === "string" ? JSON.parse(sizes) : sizes;
-
-      const defaultSizes = ["S", "M", "L", "XL", "XXL"];
-      for (let size of defaultSizes) {
-        if (parsedSizes[size] === undefined || isNaN(parsedSizes[size])) {
-          parsedSizes[size] = 0;
-        }
+    let parsedSizes = {};
+    if (sizes) {
+      try {
+        const tempSizes = typeof sizes === "string" ? JSON.parse(sizes) : sizes;
+        // Chuyển đổi thành Map để lưu
+        parsedSizes = new Map(Object.entries(tempSizes));
+      } catch (e) {
+        return res.json({
+          success: false,
+          message: "Định dạng sizes không hợp lệ",
+        });
       }
-    } catch (e) {
-      return res.json({
-        success: false,
-        message: "Định dạng sizes không hợp lệ",
-      });
     }
 
     const productData = {
@@ -197,7 +194,14 @@ const updateProduct = async (req, res) => {
           ? true
           : false
         : product.bestseller;
-    product.sizes = sizes ? JSON.parse(sizes) : product.sizes;
+    if (sizes) {
+      try {
+        const tempSizes = typeof sizes === "string" ? JSON.parse(sizes) : sizes;
+        product.sizes = new Map(Object.entries(tempSizes));
+      } catch (e) {
+        // Bỏ qua nếu parse lỗi, giữ lại giá trị cũ
+      }
+    }
     product.sale =
       sale !== undefined ? (sale === "true" ? true : false) : product.sale; // New add
     product.image = updatedImageUrls;

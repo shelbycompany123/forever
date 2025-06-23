@@ -15,13 +15,7 @@ const AddProducts = ({ token }) => {
   const [category, setCategory] = useState([]);
   const [subCategory, setSubCategory] = useState([]);
   const [bestseller, setBestseller] = useState(false);
-  const [sizes, setSizes] = useState({
-    S: 0,
-    M: 0,
-    L: 0,
-    XL: 0,
-    XXL: 0,
-  });
+  const [sizes, setSizes] = useState([{ name: "S", stock: 10 }]);
   const [sale, setSale] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedSubCategory, setSelectedSubCategory] = useState("");
@@ -40,6 +34,13 @@ const AddProducts = ({ token }) => {
       return;
     }
 
+    const sizesObject = sizes.reduce((obj, item) => {
+      if (item.name) {
+        obj[item.name] = Number(item.stock) || 0;
+      }
+      return obj;
+    }, {});
+
     try {
       setLoading(true);
       const formData = new FormData();
@@ -51,7 +52,7 @@ const AddProducts = ({ token }) => {
       formData.append("category", selectedCategory);
       formData.append("subCategory", selectedSubCategory);
       formData.append("bestseller", bestseller);
-      formData.append("sizes", JSON.stringify(sizes));
+      formData.append("sizes", JSON.stringify(sizesObject));
       formData.append("sale", sale);
 
       // Thêm tất cả ảnh vào mảng images
@@ -74,7 +75,7 @@ const AddProducts = ({ token }) => {
         setImages([]);
         setNewPrice("");
         setOldPrice("");
-        setSizes({ S: 0, M: 0, L: 0, XL: 0, XXL: 0 });
+        setSizes([{ name: "S", stock: 10 }]);
         setBestseller(false);
         setSale(false);
       } else {
@@ -126,11 +127,19 @@ const AddProducts = ({ token }) => {
     }
   };
 
-  const handleSizeChange = (size, value) => {
-    setSizes((prev) => ({
-      ...prev,
-      [size]: parseInt(value) || 0,
-    }));
+  const handleSizeChange = (index, field, value) => {
+    const newSizes = [...sizes];
+    newSizes[index][field] = value;
+    setSizes(newSizes);
+  };
+
+  const addSizeField = () => {
+    setSizes([...sizes, { name: "", stock: 0 }]);
+  };
+
+  const removeSizeField = (index) => {
+    const newSizes = sizes.filter((_, i) => i !== index);
+    setSizes(newSizes);
   };
 
   useEffect(() => {
@@ -276,6 +285,63 @@ const AddProducts = ({ token }) => {
               </div>
             </div>
 
+            {/* Sizes */}
+            <div>
+              <h4 className="text-md font-semibold text-black mb-2 flex items-center gap-2">
+                <Tag size={16} />
+                Kích Thước & Tồn Kho
+              </h4>
+              <div className="space-y-4">
+                {sizes.map((size, index) => (
+                  <div key={index} className="grid grid-cols-3 gap-4">
+                    <div className="form-control">
+                      <label className="label">
+                        <span className="label-text">Tên Size</span>
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="VD: S, M, L..."
+                        value={size.name}
+                        onChange={(e) =>
+                          handleSizeChange(index, "name", e.target.value)
+                        }
+                        className="input input-bordered"
+                      />
+                    </div>
+                    <div className="form-control">
+                      <label className="label">
+                        <span className="label-text">Số lượng</span>
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        placeholder="VD: 10"
+                        value={size.stock}
+                        onChange={(e) =>
+                          handleSizeChange(index, "stock", e.target.value)
+                        }
+                        className="input input-bordered"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeSizeField(index)}
+                      className="btn btn-error btn-outline mt-9"
+                    >
+                      <X size={16} /> Xóa
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={addSizeField}
+                className="btn btn-primary btn-outline mt-4"
+              >
+                Thêm Size
+              </button>
+            </div>
+
             {/* Categories & Pricing */}
             <div>
               <h4 className="text-md font-semibold text-black mb-4 flex items-center gap-2">
@@ -336,27 +402,6 @@ const AddProducts = ({ token }) => {
                     className="form-input"
                   />
                 </div>
-              </div>
-            </div>
-
-            {/* Sizes */}
-            <div>
-              <h4 className="text-md font-semibold text-black mb-4">
-                Kích Thước & Số Lượng
-              </h4>
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                {Object.keys(sizes).map((size) => (
-                  <div key={size} className="form-group">
-                    <label className="form-label">{size}</label>
-                    <input
-                      type="number"
-                      value={sizes[size]}
-                      onChange={(e) => handleSizeChange(size, e.target.value)}
-                      className="form-input"
-                      min="0"
-                    />
-                  </div>
-                ))}
               </div>
             </div>
 

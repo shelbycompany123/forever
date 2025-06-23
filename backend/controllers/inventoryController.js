@@ -6,7 +6,7 @@ const getLowStockProducts = async (req, res) => {
     const products = await productModel.find();
 
     const lowStockProducts = products.filter((product) => {
-      const totalStock = Object.values(product.sizes).reduce(
+      const totalStock = Array.from(product.sizes.values()).reduce(
         (sum, stock) => sum + stock,
         0
       );
@@ -19,7 +19,7 @@ const getLowStockProducts = async (req, res) => {
         _id: product._id,
         name: product.name,
         sizes: product.sizes,
-        totalStock: Object.values(product.sizes).reduce(
+        totalStock: Array.from(product.sizes.values()).reduce(
           (sum, stock) => sum + stock,
           0
         ),
@@ -42,7 +42,8 @@ const restockProduct = async (req, res) => {
       return res.json({ success: false, message: "Sản phẩm không tồn tại" });
     }
 
-    product.sizes[size] = (product.sizes[size] || 0) + quantity;
+    const currentStock = product.sizes.get(size) || 0;
+    product.sizes.set(size, currentStock + Number(quantity));
 
     product.stockHistory.push({
       type: "in",
@@ -75,7 +76,7 @@ const getInventoryStats = async (req, res) => {
     let outOfStockCount = 0;
 
     products.forEach((product) => {
-      const productStock = Object.values(product.sizes).reduce(
+      const productStock = Array.from(product.sizes.values()).reduce(
         (sum, stock) => sum + stock,
         0
       );
@@ -107,10 +108,10 @@ const getInventoryStats = async (req, res) => {
 
 const getInventoryProducts = async (req, res) => {
   try {
-    const products = await productModel.find({});
+    const products = await productModel.find({}).populate("category");
 
     const inventoryProducts = products.map((product) => {
-      const totalStock = Object.values(product.sizes).reduce(
+      const totalStock = Array.from(product.sizes.values()).reduce(
         (sum, stock) => sum + stock,
         0
       );
@@ -118,7 +119,7 @@ const getInventoryProducts = async (req, res) => {
         _id: product._id,
         name: product.name,
         image: product.image,
-        category: product.category,
+        category: product.category.name,
         new_price: product.new_price,
         sizes: product.sizes,
         totalStock,

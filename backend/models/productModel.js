@@ -33,11 +33,9 @@ const productSchema = new mongoose.Schema({
   },
 
   sizes: {
-    S: { type: Number, default: 0 },
-    M: { type: Number, default: 0 },
-    L: { type: Number, default: 0 },
-    XL: { type: Number, default: 0 },
-    XXL: { type: Number, default: 0 },
+    type: Map,
+    of: Number,
+    default: {},
   },
   bestseller: {
     type: Boolean,

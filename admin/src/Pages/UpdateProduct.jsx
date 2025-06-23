@@ -24,13 +24,7 @@ const UpdateProduct = ({ token }) => {
     subCategory: "",
     bestseller: false,
     sale: false,
-    sizes: {
-      S: 0,
-      M: 0,
-      L: 0,
-      XL: 0,
-      XXL: 0,
-    },
+    sizes: [],
     image: [],
   });
 
@@ -41,7 +35,10 @@ const UpdateProduct = ({ token }) => {
         const res = await axios.get(backendUrl + `/api/product/get/${id}`);
         if (res.data.success) {
           const productData = res.data.data;
-          setFormData(productData);
+          const sizesArray = Object.entries(productData.sizes || {}).map(
+            ([name, stock]) => ({ name, stock })
+          );
+          setFormData({ ...productData, sizes: sizesArray });
           setSelectedCategory(productData.category?._id || "");
           setSelectedSubCategory(productData.subCategory?._id || "");
         } else {
@@ -64,13 +61,27 @@ const UpdateProduct = ({ token }) => {
     setFormData({ ...formData, [event.target.name]: event.target.value });
   };
 
-  const handleSizeChange = (size, value) => {
+  const handleSizeChange = (index, field, value) => {
+    const newSizes = [...formData.sizes];
+    newSizes[index][field] = value;
     setFormData((prev) => ({
       ...prev,
-      sizes: {
-        ...prev.sizes,
-        [size]: parseInt(value) || 0,
-      },
+      sizes: newSizes,
+    }));
+  };
+
+  const addSizeField = () => {
+    setFormData((prev) => ({
+      ...prev,
+      sizes: [...prev.sizes, { name: "", stock: 0 }],
+    }));
+  };
+
+  const removeSizeField = (index) => {
+    const newSizes = formData.sizes.filter((_, i) => i !== index);
+    setFormData((prev) => ({
+      ...prev,
+      sizes: newSizes,
     }));
   };
 
@@ -92,6 +103,13 @@ const UpdateProduct = ({ token }) => {
       return;
     }
 
+    const sizesObject = formData.sizes.reduce((obj, item) => {
+      if (item.name) {
+        obj[item.name] = Number(item.stock) || 0;
+      }
+      return obj;
+    }, {});
+
     try {
       setLoading(true);
       const newForm = new FormData();
@@ -102,7 +120,7 @@ const UpdateProduct = ({ token }) => {
       newForm.append("category", selectedCategory);
       newForm.append("subCategory", selectedSubCategory);
       newForm.append("bestseller", formData.bestseller);
-      newForm.append("sizes", JSON.stringify(formData.sizes));
+      newForm.append("sizes", JSON.stringify(sizesObject));
       newForm.append("sale", formData.sale);
 
       // Append images - chỉ append những ảnh đã được thay đổi (File objects)
@@ -373,6 +391,63 @@ const UpdateProduct = ({ token }) => {
               </div>
             </div>
 
+            {/* Sizes */}
+            <div>
+              <h4 className="text-md font-semibold text-black mb-2 flex items-center gap-2">
+                <Tag size={16} />
+                Kích Thước & Tồn Kho
+              </h4>
+              <div className="space-y-4">
+                {formData.sizes.map((size, index) => (
+                  <div key={index} className="grid grid-cols-3 gap-4">
+                    <div className="form-control">
+                      <label className="label">
+                        <span className="label-text">Tên Size</span>
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="VD: S, M, L..."
+                        value={size.name}
+                        onChange={(e) =>
+                          handleSizeChange(index, "name", e.target.value)
+                        }
+                        className="input input-bordered"
+                      />
+                    </div>
+                    <div className="form-control">
+                      <label className="label">
+                        <span className="label-text">Số lượng</span>
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        placeholder="VD: 10"
+                        value={size.stock}
+                        onChange={(e) =>
+                          handleSizeChange(index, "stock", e.target.value)
+                        }
+                        className="input input-bordered"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeSizeField(index)}
+                      className="btn btn-error btn-outline mt-9"
+                    >
+                      <X size={16} /> Xóa
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={addSizeField}
+                className="btn btn-primary btn-outline mt-4"
+              >
+                Thêm Size
+              </button>
+            </div>
+
             {/* Categories & Pricing */}
             <div>
               <h4 className="text-md font-semibold text-black mb-4 flex items-center gap-2">
@@ -435,27 +510,6 @@ const UpdateProduct = ({ token }) => {
                     className="form-input"
                   />
                 </div>
-              </div>
-            </div>
-
-            {/* Sizes */}
-            <div>
-              <h4 className="text-md font-semibold text-black mb-4">
-                Kích Thước & Số Lượng
-              </h4>
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                {Object.keys(formData.sizes || {}).map((size) => (
-                  <div key={size} className="form-group">
-                    <label className="form-label">{size}</label>
-                    <input
-                      type="number"
-                      value={formData.sizes?.[size] || 0}
-                      onChange={(e) => handleSizeChange(size, e.target.value)}
-                      className="form-input"
-                      min="0"
-                    />
-                  </div>
-                ))}
               </div>
             </div>
 
