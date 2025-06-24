@@ -9,7 +9,8 @@ import axios from "axios";
 
 const Product = () => {
   const { productId } = useParams();
-  const { product_list, addToCart, backendUrl } = useContext(ShopContext);
+  const { product_list, addToCart, backendUrl, getDisplayPrice } =
+    useContext(ShopContext);
   const [productData, setProductData] = useState(false);
   const [image, setImage] = useState("");
   const [size, setSize] = useState("");
@@ -18,6 +19,7 @@ const Product = () => {
     averageRating: 0,
     totalRatings: 0,
   });
+  const [countdown, setCountdown] = useState(null);
 
   const formatCurrency = (amount) => {
     const formatted = amount?.toLocaleString("vi-VN");
@@ -74,6 +76,36 @@ const Product = () => {
     fetchProductData();
   }, [productId, product_list]);
 
+  useEffect(() => {
+    if (!productData || !productData.promo_end || !productData.promo_start) {
+      setCountdown(null);
+      return;
+    }
+    const now = Date.now();
+    const promoStart = new Date(productData.promo_start).getTime();
+    const promoEnd = new Date(productData.promo_end).getTime();
+    if (now < promoStart || now > promoEnd) {
+      setCountdown(null);
+      return;
+    }
+    const updateCountdown = () => {
+      const now = Date.now();
+      const distance = promoEnd - now;
+      if (distance <= 0) {
+        setCountdown(null);
+        return;
+      }
+      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((distance / (1000 * 60 * 60)) % 24);
+      const minutes = Math.floor((distance / (1000 * 60)) % 60);
+      const seconds = Math.floor((distance / 1000) % 60);
+      setCountdown({ days, hours, minutes, seconds });
+    };
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 1000);
+    return () => clearInterval(interval);
+  }, [productData]);
+
   if (loading)
     return (
       <div className="flex justify-center items-center h-screen">
@@ -115,12 +147,27 @@ const Product = () => {
           </div>
           <div className="flex gap-5">
             <p className="mt-5 text-3xl font-medium">
-              {formatCurrency(productData.new_price)}
+              {formatCurrency(getDisplayPrice(productData))}
             </p>
-            <p className="mt-5 text-3xl font-sm text-gray-400 line-through italic">
-              {formatCurrency(productData.old_price)}
-            </p>
+            {productData.promo_price &&
+              productData.promo_start &&
+              productData.promo_end &&
+              new Date(productData.promo_start) <= Date.now() &&
+              Date.now() <= new Date(productData.promo_end) && (
+                <p className="mt-5 text-3xl font-sm text-gray-400 line-through italic">
+                  {formatCurrency(productData.selling_price)}
+                </p>
+              )}
           </div>
+          {countdown && (
+            <div className="mt-2 mb-2 text-orange-600 font-semibold text-lg">
+              Kết thúc khuyến mãi sau:{" "}
+              {countdown.days > 0 ? `${countdown.days} ngày ` : ""}
+              {countdown.hours.toString().padStart(2, "0")}:
+              {countdown.minutes.toString().padStart(2, "0")}:
+              {countdown.seconds.toString().padStart(2, "0")}
+            </div>
+          )}
           <p className="mt-5 text-gray-500 md:w-4/5 whitespace-pre-line">
             {productData.description}
           </p>

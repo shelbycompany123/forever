@@ -56,6 +56,31 @@ const ListProducts = ({ token }) => {
     return formatted.replace(/\./g, ",") + " VNĐ";
   };
 
+  const getDisplayPrice = (item) => {
+    const now = Date.now();
+    if (
+      item.promo_price &&
+      item.promo_start &&
+      item.promo_end &&
+      new Date(item.promo_start) <= now &&
+      now <= new Date(item.promo_end)
+    ) {
+      return item.promo_price;
+    }
+    return item.selling_price;
+  };
+
+  const isPromoActive = (item) => {
+    const now = Date.now();
+    return (
+      item.promo_price &&
+      item.promo_start &&
+      item.promo_end &&
+      new Date(item.promo_start) <= now &&
+      now <= new Date(item.promo_end)
+    );
+  };
+
   // Filter products based on search and category
   const filteredProducts = list.filter((product) => {
     const matchesSearch = product.name
@@ -161,71 +186,104 @@ const ListProducts = ({ token }) => {
           <table className="table">
             <thead>
               <tr>
-                <th>#</th>
-                <th>Hình Ảnh</th>
-                <th>Tên Sản Phẩm</th>
-                <th>Danh Mục</th>
-                <th>Kích Thước</th>
-                <th>Giá Mới</th>
-                <th>Giá Cũ</th>
-                <th>Trạng Thái</th>
-                <th>Thao Tác</th>
+                <th>Ảnh</th>
+                <th>Tên</th>
+                <th>Danh mục</th>
+                <th>Tổng tồn kho</th>
+                <th>Giá bán</th>
+                <th>Giá KM</th>
+                <th>Giá gốc</th>
+                <th>Thời gian KM</th>
+                <th>Trạng thái</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
-              {filteredProducts.map((item, index) => (
-                <tr key={index} className="hover:bg-gray-50 transition-colors">
-                  <td className="font-medium text-gray-700">{index + 1}</td>
+              {filteredProducts.map((item) => (
+                <tr key={item._id} className="hover">
                   <td>
-                    <div className="w-16 h-16 rounded-lg overflow-hidden border border-gray-200">
-                      <img
-                        className="w-full h-full object-cover"
-                        src={item.image[0]}
-                        alt={item.name}
-                      />
-                    </div>
+                    <img
+                      src={item.image[0]}
+                      alt={item.name}
+                      className="w-12 h-12 object-cover rounded"
+                    />
                   </td>
                   <td>
-                    <div className="font-medium text-black max-w-xs truncate">
-                      {item.name}
-                    </div>
-                  </td>
-                  <td>
-                    <span className="px-3 py-1 whitespace-nowrap bg-gray-100 text-black rounded-full text-sm font-medium">
-                      {item?.category?.name} - {item?.subCategory?.name}
-                    </span>
-                  </td>
-                  <td>
-                    <div className="flex flex-wrap gap-1">
-                      {Object.entries(item.sizes).map(([key, value], index) => (
+                    <p className="font-bold">{item.name}</p>
+                    <div className="flex gap-2 mt-1 flex-wrap">
+                      {Object.entries(item.sizes).map(([size, stock]) => (
                         <span
-                          key={index}
-                          className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs font-medium"
+                          key={size}
+                          className={`badge badge-sm ${
+                            stock > 0 ? "badge-ghost" : "badge-error"
+                          }`}
                         >
-                          {key} - {value}
+                          {size}: {stock}
                         </span>
                       ))}
                     </div>
                   </td>
                   <td>
+                    <div>
+                      {item.category?.name || "-"}
+                      {item.subCategory?.name
+                        ? ` - ${item.subCategory.name}`
+                        : ""}
+                    </div>
+                  </td>
+                  <td>
+                    {Object.entries(item.sizes).reduce(
+                      (acc, [size, stock]) => acc + stock,
+                      0
+                    )}
+                  </td>
+                  <td>
                     <span className="font-semibold text-black">
-                      {formatCurrency(item.new_price)}
+                      {formatCurrency(item.selling_price)}
                     </span>
                   </td>
                   <td>
-                    <span className="text-gray-500 line-through">
-                      {formatCurrency(item.old_price)}
+                    {isPromoActive(item) ? (
+                      <span className="font-semibold text-red-600">
+                        {formatCurrency(item.promo_price)}
+                      </span>
+                    ) : (
+                      <span className="text-gray-400">-</span>
+                    )}
+                  </td>
+                  <td>
+                    <span className="text-gray-500">
+                      {formatCurrency(item.original_price)}
                     </span>
+                  </td>
+                  <td className="whitespace-nowrap">
+                    {item.promo_start && item.promo_end ? (
+                      <span className="text-xs text-gray-600">
+                        {new Date(item.promo_start).toLocaleString()}
+                        <br />
+                        đến
+                        <br />
+                        {new Date(item.promo_end).toLocaleString()}
+                      </span>
+                    ) : (
+                      <span className="text-gray-400">-</span>
+                    )}
                   </td>
                   <td>
                     <span
                       className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        item.sale
+                        isPromoActive(item)
+                          ? "bg-yellow-100 text-yellow-800"
+                          : item.sale
                           ? "bg-red-100 text-red-800"
                           : "bg-gray-100 text-gray-600"
                       }`}
                     >
-                      {item.sale ? "🏷️ Sale" : "Thường"}
+                      {isPromoActive(item)
+                        ? "Đang KM"
+                        : item.sale
+                        ? "🏷️ Sale"
+                        : "Thường"}
                     </span>
                   </td>
                   <td>

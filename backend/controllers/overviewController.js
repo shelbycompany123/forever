@@ -76,8 +76,6 @@ const getTopSellingProducts = async (req, res) => {
             soldQuantity: soldQuantity,
             category: product.category,
             subCategory: product.subCategory,
-            bestseller: product.bestseller,
-            sale: product.sale,
           };
         }
         return null;

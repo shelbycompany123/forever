@@ -269,7 +269,7 @@ const Orders = () => {
                           </h3>
                           <div className="flex flex-wrap items-center gap-4 mt-2 text-sm text-gray-600">
                             <span className="text-lg font-bold text-black">
-                              {formatCurrency(item.new_price || item.price)}
+                              {formatCurrency(item.selling_price)}
                             </span>
                             <span className="flex items-center gap-1">
                               <span>📦</span>

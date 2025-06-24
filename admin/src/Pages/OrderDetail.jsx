@@ -6,7 +6,6 @@ import { useParams, useNavigate } from "react-router-dom";
 import {
   Package,
   User,
-  Calendar,
   Phone,
   MapPin,
   CreditCard,
@@ -182,7 +181,7 @@ const OrderDetail = ({ token }) => {
         {/* Main Content - 2 columns */}
         <div className="lg:col-span-2 space-y-6">
           {/* Customer Information */}
-          <div className="card">
+          <div className="card h-72">
             <div className="card-header">
               <h3 className="font-semibold text-black flex items-center gap-2">
                 <User size={20} />
@@ -237,7 +236,7 @@ const OrderDetail = ({ token }) => {
                   >
                     <div className="w-20 h-20 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
                       <img
-                        src={item.image}
+                        src={item.image[0]}
                         alt={item.name}
                         className="w-full h-full object-cover"
                         onError={(e) => {
@@ -256,7 +255,7 @@ const OrderDetail = ({ token }) => {
                         </div>
                         <div className="text-right ml-4">
                           <p className="font-bold text-black text-lg">
-                            {formatCurrency(item.new_price)}
+                            {formatCurrency(item.selling_price)}
                           </p>
                           <p className="text-gray-600">
                             Số lượng: {item.quantity}
@@ -267,7 +266,7 @@ const OrderDetail = ({ token }) => {
                         <p className="text-sm text-gray-600">
                           Tổng:{" "}
                           <span className="font-semibold text-black">
-                            {formatCurrency(item.new_price * item.quantity)}
+                            {formatCurrency(item.selling_price * item.quantity)}
                           </span>
                         </p>
                       </div>
@@ -282,7 +281,7 @@ const OrderDetail = ({ token }) => {
         {/* Sidebar - Order Details & Status */}
         <div className="space-y-6">
           {/* Order Summary */}
-          <div className="card">
+          <div className="card h-72">
             <div className="card-header">
               <h3 className="font-semibold text-black flex items-center gap-2">
                 <CreditCard size={20} />
@@ -332,7 +331,7 @@ const OrderDetail = ({ token }) => {
           </div>
 
           {/* Status Management */}
-          <div className="card">
+          <div className="card h-56">
             <div className="card-header">
               <h3 className="font-semibold text-black flex items-center gap-2">
                 <Edit size={20} />

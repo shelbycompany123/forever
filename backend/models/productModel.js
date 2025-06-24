@@ -9,13 +9,25 @@ const productSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  new_price: {
+  selling_price: {
     type: Number,
     required: true,
   },
-  old_price: {
+  original_price: {
     type: Number,
     required: true,
+  },
+  promo_price: {
+    type: Number,
+    default: null,
+  },
+  promo_start: {
+    type: Date,
+    default: null,
+  },
+  promo_end: {
+    type: Date,
+    default: null,
   },
   image: {
     type: [String],
@@ -37,13 +49,6 @@ const productSchema = new mongoose.Schema({
     of: Number,
     default: {},
   },
-  bestseller: {
-    type: Boolean,
-  },
-  sale: {
-    type: Boolean,
-    default: false,
-  }, // New add
   reorderPoint: {
     type: Number,
     default: 100,
@@ -74,6 +79,7 @@ const productSchema = new mongoose.Schema({
   date: {
     type: Number,
     required: true,
+    default: Date.now,
   },
 });
 

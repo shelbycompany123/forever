@@ -2,12 +2,10 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { backendUrl } from "../App";
 import {
-  TrendingUp,
   Users,
   ShoppingCart,
   DollarSign,
   Package,
-  Eye,
   Calendar,
   Activity,
   ArrowUpRight,
@@ -152,7 +150,6 @@ const Overview = ({ token }) => {
           }
         };
 
-        // Chạy tất cả các API calls song song
         await Promise.all([
           fetchRevenue(),
           fetchUsers(),
@@ -163,7 +160,6 @@ const Overview = ({ token }) => {
           fetchRevenueStats(),
         ]);
 
-        // Tạo thống kê tháng sau khi có dữ liệu
         setMonthlyStats({
           thisMonth: {
             orders: Math.floor(totalOrders * 0.3),
@@ -466,7 +462,8 @@ const Overview = ({ token }) => {
                           </div>
                           <div>
                             <p className="font-medium text-black">
-                              {formatCurrency(order.amount)}
+                              {order.items.map((item) => item.name).join(", ")}{" "}
+                              - {formatCurrency(order.amount)}
                             </p>
                             <p className="text-sm text-gray-600">
                               {order.date}

@@ -6,7 +6,6 @@ import {
   singleProduct,
   getProduct,
   updateProduct,
-  getSaleProducts,
   filterProducts,
 } from "../controllers/productController.js";
 import upload from "../middleware/multer.js";
@@ -29,8 +28,6 @@ productRouter.put(
   upload.array("images", 10),
   updateProduct
 );
-
-productRouter.get("/sale", getSaleProducts);
 
 productRouter.get("/filter", filterProducts);
 

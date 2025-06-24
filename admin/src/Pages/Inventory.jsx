@@ -136,7 +136,7 @@ const Inventory = ({ token }) => {
           </div>
           <button
             onClick={fetchData}
-            className="btn-primary flex items-center gap-2"
+            className="btn-primary flex items-center gap-2 p-1 rounded-sm"
           >
             <RefreshCw size={16} />
             Làm mới
@@ -274,9 +274,7 @@ const Inventory = ({ token }) => {
                     </td>
                     <td>{p.category}</td>
                     <td>{p.totalStock}</td>
-                    <td>
-                      {(p.totalStock * p.new_price).toLocaleString("vi-VN")}đ
-                    </td>
+                    <td>{(p.totalStock * p.price).toLocaleString("vi-VN")}đ</td>
                     <td className="flex flex-col gap-2">
                       <button
                         onClick={() => openModal(p)}

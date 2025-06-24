@@ -23,6 +23,20 @@ const ShopContextProvider = (props) => {
     return formatted?.replace(/\./g, ",") + " VNĐ";
   };
 
+  const getDisplayPrice = (data) => {
+    const now = Date.now();
+    if (
+      data.promo_price &&
+      data.promo_start &&
+      data.promo_end &&
+      new Date(data.promo_start) <= now &&
+      now <= new Date(data.promo_end)
+    ) {
+      return data.promo_price;
+    }
+    return data.selling_price;
+  };
+
   const addToCart = async (itemId, size) => {
     if (!size) {
       toast.error("Vui Lòng Chọn Size !");
@@ -178,6 +192,7 @@ const ShopContextProvider = (props) => {
     navigate,
     backendUrl,
     formatCurrency,
+    getDisplayPrice,
     setToken,
     token,
     orderData,

@@ -2,11 +2,16 @@ import React, { useContext, useEffect, useState } from "react";
 import { ShopContext } from "../Context/ShopContext";
 import Title from "../Component/Title";
 import CartTotal from "../Component/CartTotal";
-import { assets } from "../assets/assets";
 
 const Cart = () => {
-  const { product_list, cartItems, updateQuantity, navigate, setOrderData } =
-    useContext(ShopContext);
+  const {
+    product_list,
+    cartItems,
+    updateQuantity,
+    navigate,
+    setOrderData,
+    getDisplayPrice,
+  } = useContext(ShopContext);
   const [cartData, setCartData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedItems, setSelectedItems] = useState([]);
@@ -30,7 +35,6 @@ const Cart = () => {
     }
   }, [cartItems, product_list]);
 
-  // Handle item selection
   const handleItemSelect = (item) => {
     setSelectedItems((prev) => {
       const isSelected = prev.some(
@@ -48,7 +52,6 @@ const Cart = () => {
     });
   };
 
-  // Handle select all items
   const handleSelectAll = () => {
     if (selectedItems.length === cartData.length) {
       setSelectedItems([]);
@@ -235,7 +238,7 @@ const Cart = () => {
                             <div className="flex items-center gap-1">
                               <span>💰</span>
                               <span className="font-semibold text-black">
-                                ₹{productData.new_price}
+                                {getDisplayPrice(productData)}
                               </span>
                             </div>
                             <div className="flex items-center gap-1">
@@ -250,10 +253,11 @@ const Cart = () => {
 
                           {/* Total for this item */}
                           <div className="text-sm text-gray-500 mb-3">
-                            Tổng: ₹
+                            Tổng:{" "}
                             {(
-                              productData.new_price * item.quantity
-                            ).toLocaleString()}
+                              getDisplayPrice(productData) * item.quantity
+                            ).toLocaleString()}{" "}
+                            VNĐ
                           </div>
 
                           {/* Quantity Control */}

@@ -120,7 +120,7 @@ const getInventoryProducts = async (req, res) => {
         name: product.name,
         image: product.image,
         category: product.category.name,
-        new_price: product.new_price,
+        price: product.original_price,
         sizes: product.sizes,
         totalStock,
       };

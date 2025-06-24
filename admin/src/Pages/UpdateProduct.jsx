@@ -5,6 +5,15 @@ import { backendUrl } from "../App";
 import toast from "react-hot-toast";
 import { Upload, Package, Tag, Save, X, ArrowLeft, Edit } from "lucide-react";
 
+// Hàm chuyển đổi ngày về định dạng phù hợp với input datetime-local
+function toDatetimeLocal(dateStr) {
+  if (!dateStr) return "";
+  const date = new Date(dateStr);
+  const offset = date.getTimezoneOffset();
+  const localDate = new Date(date.getTime() - offset * 60 * 1000);
+  return localDate.toISOString().slice(0, 16);
+}
+
 const UpdateProduct = ({ token }) => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -18,12 +27,13 @@ const UpdateProduct = ({ token }) => {
   const [formData, setFormData] = useState({
     name: "",
     description: "",
-    new_price: "",
-    old_price: "",
+    selling_price: "",
+    original_price: "",
+    promo_price: "",
+    promo_start: "",
+    promo_end: "",
     category: "",
     subCategory: "",
-    bestseller: false,
-    sale: false,
     sizes: [],
     image: [],
   });
@@ -38,7 +48,12 @@ const UpdateProduct = ({ token }) => {
           const sizesArray = Object.entries(productData.sizes || {}).map(
             ([name, stock]) => ({ name, stock })
           );
-          setFormData({ ...productData, sizes: sizesArray });
+          setFormData({
+            ...productData,
+            sizes: sizesArray,
+            promo_start: toDatetimeLocal(productData.promo_start),
+            promo_end: toDatetimeLocal(productData.promo_end),
+          });
           setSelectedCategory(productData.category?._id || "");
           setSelectedSubCategory(productData.subCategory?._id || "");
         } else {
@@ -91,8 +106,8 @@ const UpdateProduct = ({ token }) => {
     if (
       !formData.name.trim() ||
       !formData.description.trim() ||
-      !formData.new_price ||
-      !formData.old_price
+      !formData.selling_price ||
+      !formData.original_price
     ) {
       toast.error("Vui lòng điền đầy đủ thông tin bắt buộc");
       return;
@@ -115,32 +130,30 @@ const UpdateProduct = ({ token }) => {
       const newForm = new FormData();
       newForm.append("name", formData.name);
       newForm.append("description", formData.description);
-      newForm.append("new_price", formData.new_price);
-      newForm.append("old_price", formData.old_price);
+      newForm.append("selling_price", formData.selling_price);
+      newForm.append("original_price", formData.original_price);
+      if (formData.promo_price)
+        newForm.append("promo_price", formData.promo_price);
+      if (formData.promo_start)
+        newForm.append("promo_start", formData.promo_start);
+      if (formData.promo_end) newForm.append("promo_end", formData.promo_end);
       newForm.append("category", selectedCategory);
       newForm.append("subCategory", selectedSubCategory);
-      newForm.append("bestseller", formData.bestseller);
       newForm.append("sizes", JSON.stringify(sizesObject));
-      newForm.append("sale", formData.sale);
 
-      // Append images - chỉ append những ảnh đã được thay đổi (File objects)
       const newImages = [];
       const currentImages = [];
 
       formData.image.forEach((img, index) => {
         if (img && typeof img !== "string") {
-          // Đây là file mới được chọn
           newImages.push(img);
         } else if (img && typeof img === "string") {
-          // Đây là ảnh hiện tại (URL)
           currentImages.push(img);
         }
       });
 
-      // Gửi thông tin về ảnh hiện tại
       newForm.append("currentImageCount", currentImages.length);
 
-      // Gửi tất cả ảnh mới
       newImages.forEach((image) => {
         newForm.append("images", image);
       });
@@ -432,7 +445,7 @@ const UpdateProduct = ({ token }) => {
                     <button
                       type="button"
                       onClick={() => removeSizeField(index)}
-                      className="btn btn-error btn-outline mt-9"
+                      className="btn btn-error btn-outline mt-5"
                     >
                       <X size={16} /> Xóa
                     </button>
@@ -486,78 +499,61 @@ const UpdateProduct = ({ token }) => {
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Giá Mới *</label>
+                  <label className="form-label">Giá Bán *</label>
                   <input
                     onChange={onChangeHandler}
-                    name="new_price"
-                    value={formData.new_price}
+                    name="selling_price"
+                    value={formData.selling_price}
                     type="number"
-                    placeholder="Nhập giá mới"
+                    placeholder="Nhập giá bán"
                     required
                     className="form-input"
                   />
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Giá Cũ *</label>
+                  <label className="form-label">Giá Gốc *</label>
                   <input
                     onChange={onChangeHandler}
-                    name="old_price"
-                    value={formData.old_price}
+                    name="original_price"
+                    value={formData.original_price}
                     type="number"
-                    placeholder="Nhập giá cũ"
+                    placeholder="Nhập giá gốc"
                     required
                     className="form-input"
                   />
                 </div>
-              </div>
-            </div>
 
-            {/* Options */}
-            <div>
-              <h4 className="text-md font-semibold text-black mb-4">
-                Tùy Chọn
-              </h4>
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
+                <div className="form-group">
+                  <label className="form-label">Giá Khuyến Mãi</label>
                   <input
-                    type="checkbox"
-                    id="bestseller"
-                    checked={formData.bestseller}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        bestseller: e.target.checked,
-                      }))
-                    }
-                    className="w-4 h-4 text-black border-gray-300 rounded focus:ring-black"
+                    onChange={onChangeHandler}
+                    name="promo_price"
+                    value={formData.promo_price}
+                    type="number"
+                    placeholder="Nhập giá khuyến mãi (nếu có)"
+                    className="form-input"
                   />
-                  <label
-                    htmlFor="bestseller"
-                    className="text-sm font-medium text-gray-700"
-                  >
-                    Sản phẩm bán chạy
-                  </label>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="form-group">
+                  <label className="form-label">Bắt đầu khuyến mãi</label>
                   <input
-                    type="checkbox"
-                    id="sale"
-                    checked={formData.sale}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        sale: e.target.checked,
-                      }))
-                    }
-                    className="w-4 h-4 text-black border-gray-300 rounded focus:ring-black"
+                    onChange={onChangeHandler}
+                    name="promo_start"
+                    value={formData.promo_start}
+                    type="datetime-local"
+                    className="form-input"
                   />
-                  <label
-                    htmlFor="sale"
-                    className="text-sm font-medium text-gray-700"
-                  >
-                    🏷️ Sản phẩm giảm giá
-                  </label>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Kết thúc khuyến mãi</label>
+                  <input
+                    onChange={onChangeHandler}
+                    name="promo_end"
+                    value={formData.promo_end}
+                    type="datetime-local"
+                    className="form-input"
+                  />
                 </div>
               </div>
             </div>

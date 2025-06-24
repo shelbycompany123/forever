@@ -7,13 +7,14 @@ const addProduct = async (req, res) => {
     const {
       name,
       description,
-      new_price,
-      old_price,
+      selling_price,
+      original_price,
+      promo_price,
+      promo_start,
+      promo_end,
       category,
       subCategory,
       sizes,
-      bestseller,
-      sale,
     } = req.body;
 
     // Xử lý ảnh từ mảng files
@@ -46,12 +47,13 @@ const addProduct = async (req, res) => {
       name,
       description,
       category,
-      new_price: Number(new_price),
-      old_price: Number(old_price),
+      selling_price: Number(selling_price),
+      original_price: Number(original_price),
+      promo_price: promo_price ? Number(promo_price) : null,
+      promo_start: promo_start ? new Date(promo_start) : null,
+      promo_end: promo_end ? new Date(promo_end) : null,
       subCategory,
-      bestseller: bestseller ? true : false,
       sizes: parsedSizes,
-      sale: sale === "true" ? true : false, // New add
       image: imagesUrl,
       date: Date.now(),
     };
@@ -135,13 +137,14 @@ const updateProduct = async (req, res) => {
     const {
       name,
       description,
-      new_price,
-      old_price,
+      selling_price,
+      original_price,
+      promo_price,
+      promo_start,
+      promo_end,
       category,
       subCategory,
       sizes,
-      bestseller,
-      sale,
     } = req.body;
 
     // Xử lý ảnh - kiểm tra xem có ảnh mới được upload không
@@ -184,16 +187,17 @@ const updateProduct = async (req, res) => {
     // Cập nhật thông tin sản phẩm
     product.name = name || product.name;
     product.description = description || product.description;
-    product.new_price = new_price ? Number(new_price) : product.new_price;
-    product.old_price = old_price ? Number(old_price) : product.old_price;
+    product.selling_price = selling_price
+      ? Number(selling_price)
+      : product.selling_price;
+    product.original_price = original_price
+      ? Number(original_price)
+      : product.original_price;
+    product.promo_price = promo_price ? Number(promo_price) : null;
+    product.promo_start = promo_start ? new Date(promo_start) : null;
+    product.promo_end = promo_end ? new Date(promo_end) : null;
     product.category = category || product.category;
     product.subCategory = subCategory || product.subCategory;
-    product.bestseller =
-      bestseller !== undefined
-        ? bestseller === "true"
-          ? true
-          : false
-        : product.bestseller;
     if (sizes) {
       try {
         const tempSizes = typeof sizes === "string" ? JSON.parse(sizes) : sizes;
@@ -202,8 +206,6 @@ const updateProduct = async (req, res) => {
         // Bỏ qua nếu parse lỗi, giữ lại giá trị cũ
       }
     }
-    product.sale =
-      sale !== undefined ? (sale === "true" ? true : false) : product.sale; // New add
     product.image = updatedImageUrls;
 
     await product.save();
@@ -211,16 +213,6 @@ const updateProduct = async (req, res) => {
   } catch (error) {
     console.log(error);
     res.json({ success: false, message: "Lỗi khi cập nhật sản phẩm" });
-  }
-};
-
-const getSaleProducts = async (req, res) => {
-  try {
-    const saleProducts = await productModel.find({ sale: true });
-    res.json({ success: true, products: saleProducts });
-  } catch (error) {
-    console.log(error);
-    res.json({ success: false, message: "Lỗi khi lấy sản phẩm sale" });
   }
 };
 
@@ -279,7 +271,7 @@ const filterProducts = async (req, res) => {
     const products = await productModel
       .find(filter)
       .sort({
-        new_price: sort === "asc" ? 1 : -1,
+        selling_price: sort === "asc" ? 1 : -1,
       })
       .skip(skip)
       .limit(parseInt(limit))
@@ -303,6 +295,7 @@ const filterProducts = async (req, res) => {
     res.json({ success: false, message: "Lỗi khi lọc sản phẩm" });
   }
 };
+
 export {
   addProduct,
   listProducts,
@@ -310,6 +303,5 @@ export {
   singleProduct,
   getProduct,
   updateProduct,
-  getSaleProducts,
   filterProducts,
 };

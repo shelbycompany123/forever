@@ -88,6 +88,20 @@ const Orders = ({ token }) => {
       : { text: "Chờ thanh toán", color: "status-pending" };
   };
 
+  const getDisplayPrice = (item) => {
+    const now = Date.now();
+    if (
+      item.promo_price &&
+      item.promo_start &&
+      item.promo_end &&
+      new Date(item.promo_start) <= now &&
+      now <= new Date(item.promo_end)
+    ) {
+      return item.promo_price;
+    }
+    return item.selling_price;
+  };
+
   // Filter orders based on status
   const filteredOrders = orders.filter(
     (order) => filterStatus === "" || order.status === filterStatus
@@ -269,7 +283,7 @@ const Orders = ({ token }) => {
                                     </div>
                                     <div className="text-right ml-2">
                                       <p className="font-semibold text-black">
-                                        {formatCurrency(item.new_price)}
+                                        {formatCurrency(getDisplayPrice(item))}
                                       </p>
                                       <p className="text-sm text-gray-600">
                                         x{item.quantity}
@@ -280,7 +294,7 @@ const Orders = ({ token }) => {
                                     <p className="text-sm text-gray-600">
                                       Tổng:{" "}
                                       {formatCurrency(
-                                        item.new_price * item.quantity
+                                        getDisplayPrice(item) * item.quantity
                                       )}
                                     </p>
                                   </div>

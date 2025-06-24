@@ -10,13 +10,14 @@ const AddProducts = ({ token }) => {
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [newPrice, setNewPrice] = useState("");
-  const [oldPrice, setOldPrice] = useState("");
+  const [sellingPrice, setSellingPrice] = useState("");
+  const [originalPrice, setOriginalPrice] = useState("");
+  const [promoPrice, setPromoPrice] = useState("");
+  const [promoStart, setPromoStart] = useState("");
+  const [promoEnd, setPromoEnd] = useState("");
   const [category, setCategory] = useState([]);
   const [subCategory, setSubCategory] = useState([]);
-  const [bestseller, setBestseller] = useState(false);
   const [sizes, setSizes] = useState([{ name: "S", stock: 10 }]);
-  const [sale, setSale] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedSubCategory, setSelectedSubCategory] = useState("");
   const [loading, setLoading] = useState(false);
@@ -24,7 +25,12 @@ const AddProducts = ({ token }) => {
   const onSubmitHandler = async (e) => {
     e.preventDefault();
 
-    if (!name.trim() || !description.trim() || !newPrice || !oldPrice) {
+    if (
+      !name.trim() ||
+      !description.trim() ||
+      !sellingPrice ||
+      !originalPrice
+    ) {
       toast.error("Vui lòng điền đầy đủ thông tin bắt buộc");
       return;
     }
@@ -47,13 +53,14 @@ const AddProducts = ({ token }) => {
 
       formData.append("name", name);
       formData.append("description", description);
-      formData.append("new_price", newPrice);
-      formData.append("old_price", oldPrice);
+      formData.append("selling_price", sellingPrice);
+      formData.append("original_price", originalPrice);
+      if (promoPrice) formData.append("promo_price", promoPrice);
+      if (promoStart) formData.append("promo_start", promoStart);
+      if (promoEnd) formData.append("promo_end", promoEnd);
       formData.append("category", selectedCategory);
       formData.append("subCategory", selectedSubCategory);
-      formData.append("bestseller", bestseller);
       formData.append("sizes", JSON.stringify(sizesObject));
-      formData.append("sale", sale);
 
       // Thêm tất cả ảnh vào mảng images
       const validImages = images.filter((img) => img);
@@ -73,11 +80,12 @@ const AddProducts = ({ token }) => {
         setName("");
         setDescription("");
         setImages([]);
-        setNewPrice("");
-        setOldPrice("");
+        setSellingPrice("");
+        setOriginalPrice("");
+        setPromoPrice("");
+        setPromoStart("");
+        setPromoEnd("");
         setSizes([{ name: "S", stock: 10 }]);
-        setBestseller(false);
-        setSale(false);
       } else {
         toast.error(response.data.message);
       }
@@ -323,13 +331,13 @@ const AddProducts = ({ token }) => {
                         className="input input-bordered"
                       />
                     </div>
-                    <button
+                    <div
                       type="button"
                       onClick={() => removeSizeField(index)}
-                      className="btn btn-error btn-outline mt-9"
+                      className="btn btn-error btn-outline mt-5"
                     >
                       <X size={16} /> Xóa
-                    </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -380,66 +388,56 @@ const AddProducts = ({ token }) => {
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Giá Mới *</label>
+                  <label className="form-label">Giá Bán *</label>
                   <input
-                    onChange={(e) => setNewPrice(e.target.value)}
-                    value={newPrice}
+                    onChange={(e) => setSellingPrice(e.target.value)}
+                    value={sellingPrice}
                     type="number"
-                    placeholder="Nhập giá mới"
+                    placeholder="Nhập giá bán"
                     required
                     className="form-input"
                   />
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Giá Cũ *</label>
+                  <label className="form-label">Giá Gốc *</label>
                   <input
-                    onChange={(e) => setOldPrice(e.target.value)}
-                    value={oldPrice}
+                    onChange={(e) => setOriginalPrice(e.target.value)}
+                    value={originalPrice}
                     type="number"
-                    placeholder="Nhập giá cũ"
+                    placeholder="Nhập giá gốc"
                     required
                     className="form-input"
                   />
                 </div>
-              </div>
-            </div>
 
-            {/* Options */}
-            <div>
-              <h4 className="text-md font-semibold text-black mb-4">
-                Tùy Chọn
-              </h4>
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
+                <div className="form-group">
+                  <label className="form-label">Giá Khuyến Mãi</label>
                   <input
-                    type="checkbox"
-                    id="bestseller"
-                    checked={bestseller}
-                    onChange={(e) => setBestseller(e.target.checked)}
-                    className="w-4 h-4 text-black border-gray-300 rounded focus:ring-black"
+                    onChange={(e) => setPromoPrice(e.target.value)}
+                    value={promoPrice}
+                    type="number"
+                    placeholder="Nhập giá khuyến mãi (nếu có)"
+                    className="form-input"
                   />
-                  <label
-                    htmlFor="bestseller"
-                    className="text-sm font-medium text-gray-700"
-                  >
-                    Sản phẩm bán chạy
-                  </label>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="form-group">
+                  <label className="form-label">Bắt đầu khuyến mãi</label>
                   <input
-                    type="checkbox"
-                    id="sale"
-                    checked={sale}
-                    onChange={(e) => setSale(e.target.checked)}
-                    className="w-4 h-4 text-black border-gray-300 rounded focus:ring-black"
+                    onChange={(e) => setPromoStart(e.target.value)}
+                    value={promoStart}
+                    type="datetime-local"
+                    className="form-input"
                   />
-                  <label
-                    htmlFor="sale"
-                    className="text-sm font-medium text-gray-700"
-                  >
-                    Sản phẩm giảm giá
-                  </label>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Kết thúc khuyến mãi</label>
+                  <input
+                    onChange={(e) => setPromoEnd(e.target.value)}
+                    value={promoEnd}
+                    type="datetime-local"
+                    className="form-input"
+                  />
                 </div>
               </div>
             </div>

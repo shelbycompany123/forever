@@ -19,6 +19,7 @@ import Verify from "./Pages/Verify";
 import { Toaster } from "react-hot-toast";
 import Profile from "./Pages/Profile";
 import UpdateUserInfo from "./Pages/UpdateUserInfo";
+import OrderSuccess from "./Pages/OrderSuccess";
 
 const App = () => {
   return (
@@ -42,6 +43,7 @@ const App = () => {
         <Route path="/sale" element={<SaleProducts />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/update-user-info" element={<UpdateUserInfo />} />
+        <Route path="/order-success" element={<OrderSuccess />} />
       </Routes>
       <Footer />
     </div>

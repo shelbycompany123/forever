@@ -23,7 +23,6 @@ const placeOrder = async (req, res) => {
     const newOrder = new orderModel(orderData);
     await newOrder.save();
 
-    // Giảm kho và thêm lịch sử kho
     for (const item of items) {
       const product = await productModel.findById(item._id);
       if (product) {
@@ -34,7 +33,11 @@ const placeOrder = async (req, res) => {
             message: `Sản phẩm ${item.name} không đủ hàng`,
           });
         }
-        product.sizes[item.size] -= item.quantity;
+        await productModel.findByIdAndUpdate(item._id, {
+          $inc: {
+            [`sizes.${item.size}`]: -item.quantity,
+          },
+        });
         product.stockHistory.push({
           type: "out",
           quantity: item.quantity,
@@ -179,7 +182,11 @@ const updateStatus = async (req, res) => {
       for (const item of orderDetails.items) {
         const product = await productModel.findById(item._id);
         if (product) {
-          product.sizes[item.size] += item.quantity;
+          await productModel.findByIdAndUpdate(item._id, {
+            $inc: {
+              [`sizes.${item.size}`]: item.quantity,
+            },
+          });
           product.stockHistory.push({
             type: "in",
             quantity: item.quantity,

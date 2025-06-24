@@ -5,6 +5,7 @@ import { assets } from "../assets/assets";
 import { ShopContext } from "../Context/ShopContext";
 import toast from "react-hot-toast";
 import axios from "axios";
+import ConfirmOrder from "../Component/ConfirmOrder";
 
 const PlaceOrder = () => {
   const [method, setMethod] = useState("cod");
@@ -14,10 +15,11 @@ const PlaceOrder = () => {
     backendUrl,
     token,
     cartItems,
-    delivery_fee,
     setCartItems,
     product_list,
     orderData,
+    getDisplayPrice,
+    formatCurrency,
   } = useContext(ShopContext);
   const [formData, setFormData] = useState({
     firstName: "",
@@ -29,6 +31,8 @@ const PlaceOrder = () => {
     province: "",
     phone: "",
   });
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [pendingOrder, setPendingOrder] = useState(null);
 
   // Check if orderData is empty
   useEffect(() => {
@@ -45,7 +49,7 @@ const PlaceOrder = () => {
         (product) => product._id === item._id
       );
       if (productData) {
-        totalAmount += productData.new_price * item.quantity;
+        totalAmount += getDisplayPrice(productData) * item.quantity;
       }
     });
     return totalAmount;
@@ -113,83 +117,75 @@ const PlaceOrder = () => {
     setFormData((data) => ({ ...data, [name]: value }));
   };
 
-  const onSubmitHandler = async (event) => {
+  const handlePlaceOrderClick = (event) => {
     event.preventDefault();
+    // Chuẩn bị dữ liệu cho ConfirmOrder
+    let orderItems = [];
+    orderData.forEach((item) => {
+      const itemInfo = structuredClone(
+        product_list.find((product) => product._id === item._id)
+      );
+      if (itemInfo) {
+        itemInfo.size = item.size;
+        itemInfo.quantity = item.quantity;
+        delete itemInfo.original_price;
+        delete itemInfo.promo_price;
+        delete itemInfo.promo_start;
+        delete itemInfo.promo_end;
+        orderItems.push({
+          ...itemInfo,
+          selling_price: getDisplayPrice(itemInfo),
+        });
+      }
+    });
+    setPendingOrder({
+      address: formData,
+      items: orderItems,
+      amount: getSelectedItemsAmount(),
+      method,
+      formatCurrency,
+    });
+    setShowConfirm(true);
+  };
+
+  const handleConfirmOrder = async () => {
     setIsLoading(true);
     try {
-      let orderItems = [];
-
-      // Use orderData (selected items) instead of all cartItems
-      orderData.forEach((item) => {
-        const itemInfo = structuredClone(
-          product_list.find((product) => product._id === item._id)
-        );
-        if (itemInfo) {
-          itemInfo.size = item.size;
-          itemInfo.quantity = item.quantity;
-          orderItems.push(itemInfo);
-        }
-      });
-
-      let orderDataToSend = {
-        address: formData,
-        items: orderItems,
-        amount: getSelectedItemsAmount() + delivery_fee,
+      const orderDataToSend = {
+        address: pendingOrder.address,
+        items: pendingOrder.items,
+        amount: pendingOrder.amount,
       };
-
-      switch (method) {
-        // API Calls for COD
-        case "cod":
-          const response = await axios.post(
-            backendUrl + "/api/order/place",
-            orderDataToSend,
-            { headers: { token } }
-          );
-
-          if (response.data.success) {
-            // Remove selected items from cart
-            let updatedCartItems = structuredClone(cartItems);
-            orderData.forEach((item) => {
-              if (
-                updatedCartItems[item._id] &&
-                updatedCartItems[item._id][item.size]
-              ) {
-                delete updatedCartItems[item._id][item.size];
-                if (Object.keys(updatedCartItems[item._id]).length === 0) {
-                  delete updatedCartItems[item._id];
-                }
-              }
-            });
-            setCartItems(updatedCartItems);
-            toast.success("Order placed successfully!");
-            navigate("/orders");
-          } else {
-            toast.error(response.data.message);
+      const response = await axios.post(
+        backendUrl + "/api/order/place",
+        orderDataToSend,
+        { headers: { token } }
+      );
+      if (response.data.success) {
+        let updatedCartItems = structuredClone(cartItems);
+        orderData.forEach((item) => {
+          if (
+            updatedCartItems[item._id] &&
+            updatedCartItems[item._id][item.size]
+          ) {
+            delete updatedCartItems[item._id][item.size];
+            if (Object.keys(updatedCartItems[item._id]).length === 0) {
+              delete updatedCartItems[item._id];
+            }
           }
-          break;
-
-        case "stripe":
-          const responseStripe = await axios.post(
-            backendUrl + "/api/order/stripe",
-            orderDataToSend,
-            { headers: { token } }
-          );
-          if (responseStripe.data.success) {
-            const { session_url } = responseStripe.data;
-            window.location.replace(session_url);
-          } else {
-            toast.error(responseStripe.data.message);
-          }
-          break;
-
-        default:
-          break;
+        });
+        setCartItems(updatedCartItems);
+        toast.success("Order placed successfully!");
+        navigate("/order-success");
+      } else {
+        toast.error(response.data.message);
       }
     } catch (error) {
       console.log(error);
       toast.error(error.message);
     } finally {
       setIsLoading(false);
+      setShowConfirm(false);
     }
   };
 
@@ -207,7 +203,7 @@ const PlaceOrder = () => {
         </div>
 
         <form
-          onSubmit={onSubmitHandler}
+          onSubmit={handlePlaceOrderClick}
           className="grid grid-cols-1 lg:grid-cols-3 gap-8"
         >
           {/* Left Side - Delivery Information */}
@@ -418,7 +414,9 @@ const PlaceOrder = () => {
                             </p>
                           </div>
                           <span className="text-sm font-semibold text-gray-900">
-                            ₹{productData?.new_price * item.quantity}
+                            {formatCurrency(
+                              getDisplayPrice(productData) * item.quantity
+                            )}{" "}
                           </span>
                         </div>
                       );
@@ -454,64 +452,6 @@ const PlaceOrder = () => {
 
                 <div className="space-y-3">
                   <div
-                    onClick={() => setMethod("stripe")}
-                    className={`flex items-center p-4 border-2 rounded-lg cursor-pointer transition-all duration-200 ${
-                      method === "stripe"
-                        ? "border-black bg-gray-50"
-                        : "border-gray-200 hover:border-gray-300"
-                    }`}
-                  >
-                    <div
-                      className={`w-5 h-5 rounded-full border-2 flex items-center justify-center mr-4 ${
-                        method === "stripe"
-                          ? "border-black bg-black"
-                          : "border-gray-300"
-                      }`}
-                    >
-                      {method === "stripe" && (
-                        <div className="w-2 h-2 bg-white rounded-full"></div>
-                      )}
-                    </div>
-                    <img
-                      className="h-6 mr-3"
-                      src={assets.stripe_logo}
-                      alt="Stripe"
-                    />
-                    <span className="text-sm font-medium text-gray-700">
-                      Thẻ tín dụng (Stripe)
-                    </span>
-                  </div>
-
-                  <div
-                    onClick={() => setMethod("razorpay")}
-                    className={`flex items-center p-4 border-2 rounded-lg cursor-pointer transition-all duration-200 ${
-                      method === "razorpay"
-                        ? "border-black bg-gray-50"
-                        : "border-gray-200 hover:border-gray-300"
-                    }`}
-                  >
-                    <div
-                      className={`w-5 h-5 rounded-full border-2 flex items-center justify-center mr-4 ${
-                        method === "razorpay"
-                          ? "border-black bg-black"
-                          : "border-gray-300"
-                      }`}
-                    >
-                      {method === "razorpay" && (
-                        <div className="w-2 h-2 bg-white rounded-full"></div>
-                      )}
-                    </div>
-                    <img
-                      className="h-6 mr-3"
-                      src={assets.razorpay_logo}
-                      alt="Razorpay"
-                    />
-                    <span className="text-sm font-medium text-gray-700">
-                      Thanh toán khi nhận hàng
-                    </span>
-                  </div>
-
-                  <div
                     onClick={() => setMethod("cod")}
                     className={`flex items-center p-4 border-2 rounded-lg cursor-pointer transition-all duration-200 ${
                       method === "cod"
@@ -530,23 +470,9 @@ const PlaceOrder = () => {
                         <div className="w-2 h-2 bg-white rounded-full"></div>
                       )}
                     </div>
-                    <div className="w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center mr-3">
-                      <svg
-                        className="w-3 h-3 text-gray-600"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
-                        />
-                      </svg>
-                    </div>
+
                     <span className="text-sm font-medium text-gray-700">
-                      Cash on Delivery
+                      Thanh toán khi nhận hàng
                     </span>
                   </div>
                 </div>
@@ -594,6 +520,13 @@ const PlaceOrder = () => {
             </div>
           </div>
         </form>
+
+        <ConfirmOrder
+          open={showConfirm}
+          onClose={() => setShowConfirm(false)}
+          onConfirm={handleConfirmOrder}
+          orderInfo={pendingOrder || {}}
+        />
       </div>
     </div>
   );

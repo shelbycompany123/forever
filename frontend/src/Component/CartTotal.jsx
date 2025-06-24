@@ -3,7 +3,7 @@ import { ShopContext } from "../Context/ShopContext";
 import Title from "../Component/Title";
 
 const CartTotal = ({ selectedItems = [] }) => {
-  const { delivery_fee, product_list, formatCurrency } =
+  const { product_list, formatCurrency, getDisplayPrice } =
     useContext(ShopContext);
 
   const getSelectedItemsAmount = () => {
@@ -13,14 +13,14 @@ const CartTotal = ({ selectedItems = [] }) => {
         (product) => product._id === item._id
       );
       if (productData) {
-        totalAmount += productData.new_price * item.quantity;
+        totalAmount += getDisplayPrice(productData) * item.quantity;
       }
     });
     return totalAmount;
   };
 
   const subtotal = getSelectedItemsAmount();
-  const total = subtotal === 0 ? 0 : subtotal + delivery_fee;
+  const total = subtotal === 0 ? 0 : subtotal;
 
   return (
     <div className="w-full">
@@ -34,10 +34,7 @@ const CartTotal = ({ selectedItems = [] }) => {
           <p>{formatCurrency(subtotal)}</p>
         </div>
         <hr />
-        <div className="flex justify-between">
-          <p>Phí vận chuyển</p>
-          <p>{formatCurrency(delivery_fee)}</p>
-        </div>
+
         <hr />
         <div className="flex justify-between">
           <b>Tổng cộng</b>

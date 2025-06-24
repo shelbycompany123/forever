@@ -4,7 +4,18 @@ import { ShopContext } from "../Context/ShopContext";
 import SaleTag from "./SaleTag";
 
 const Item = ({ data }) => {
-  const { formatCurrency } = useContext(ShopContext);
+  const { formatCurrency, getDisplayPrice } = useContext(ShopContext);
+
+  const isPromoActive = (data) => {
+    const now = Date.now();
+    return (
+      data.promo_price &&
+      data.promo_start &&
+      data.promo_end &&
+      new Date(data.promo_start) <= now &&
+      now <= new Date(data.promo_end)
+    );
+  };
 
   return (
     <Link
@@ -13,9 +24,9 @@ const Item = ({ data }) => {
     >
       <div className="relative">
         <SaleTag
-          oldPrice={data?.old_price}
-          newPrice={data?.new_price}
-          isSale={data?.sale}
+          sellingPrice={data?.selling_price}
+          promoPrice={data?.promo_price}
+          isPromoActive={isPromoActive(data)}
         />
         <img
           src={data?.image[0]}
@@ -40,13 +51,14 @@ const Item = ({ data }) => {
 
         <div className="flex items-center gap-2 mt-1">
           <p className="text-base font-semibold text-black">
-            {formatCurrency(data?.new_price)}
+            {formatCurrency(getDisplayPrice(data))}
           </p>
-          {data?.old_price && data?.old_price > data?.new_price && (
-            <p className="text-sm line-through text-gray-400">
-              {formatCurrency(data?.old_price)}
-            </p>
-          )}
+          {data?.original_price &&
+            data?.original_price > getDisplayPrice(data) && (
+              <p className="text-sm line-through text-gray-400">
+                {formatCurrency(data?.original_price)}
+              </p>
+            )}
         </div>
       </div>
     </Link>
