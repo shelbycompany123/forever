@@ -1,10 +1,16 @@
 import userModel from "../models/userModel.js";
+import productModel from "../models/productModel.js";
 
 // Add products to user cart
 const addToCart = async (req, res) => {
     try {
-        const {userId, itemId, size} = req.body
-
+      const {userId, itemId, size, quantity} = req.body
+      const productData = await productModel.findById(itemId)
+      if (productData.sizes[size] === 0) {
+        return res.json({success: false, message: "Sản phẩm đã hết hàng"})
+      } else if(quantity > productData.sizes[size]){
+        return res.json({success: false, message: "Vượt quá số lượng sản phẩm"})
+      }
         const userData = await userModel.findById(userId)
         let cartData = await userData.cartData;
 
@@ -22,7 +28,7 @@ const addToCart = async (req, res) => {
 
         await userModel.findByIdAndUpdate(userId, {cartData})
 
-        res.json({ success: true, message: "Add To Cart"})
+        res.json({ success: true, message: "Thêm vào giỏ hàng thành công"})
 
     } catch (error) {
         console.log(error);
@@ -34,14 +40,19 @@ const addToCart = async (req, res) => {
 const updateCart = async (req, res) => {
     try {
         const {userId, itemId, size, quantity} = req.body;
-
+        const productData = await productModel.findById(itemId)
+        if (productData.sizes[size] === 0) {
+            return res.json({success: false, message: "Sản phẩm đã hết hàng"})
+        } else if(quantity > productData.sizes[size]){
+            return res.json({success: false, message: "Vượt quá số lượng sản phẩm"})
+        }
         const userData = await userModel.findById(userId)
         let cartData = await userData.cartData;
 
         cartData[itemId][size] = quantity
 
         await userModel.findByIdAndUpdate(userId, {cartData})
-        res.json({success: true, message: "Cart Updated"})
+        res.json({success: true, message: "Cart Updated",quantity: Math.min(quantity, productData.sizes[size])})
 
 
     } catch (error) {
