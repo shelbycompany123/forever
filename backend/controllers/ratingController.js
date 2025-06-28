@@ -112,6 +112,7 @@ const getUserOrderRatings = async (req, res) => {
     const userRatings = {};
     ratings.forEach((rating) => {
       userRatings[rating.productId] = {
+        orderId: rating.orderId,
         rating: rating.rating,
         comment: rating.comment,
         date: rating.date,

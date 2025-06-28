@@ -19,6 +19,7 @@ const Navbar = () => {
   const logout = () => {
     navigate("/login");
     localStorage.removeItem("token");
+    localStorage.removeItem("userId");
     setToken("");
     setCartItems({});
   };
@@ -65,7 +66,10 @@ const Navbar = () => {
       <div className="navbar-end">
         <div className="flex items-center gap-2">
           <button
-            onClick={() => setShowSearch(true)}
+            onClick={() => {
+              navigate("/collection");
+              setShowSearch(true);
+            }}
             className="btn btn-ghost btn-circle cursor-pointer"
           >
             <Search className="w-5" />
@@ -78,43 +82,49 @@ const Navbar = () => {
               {getCartCount()}
             </span>
           </Link>
-          {token && (
-            <div className="dropdown dropdown-end">
-              <div>
-                <button
-                  tabIndex={0}
-                  className="btn btn-ghost btn-circle cursor-pointer"
-                >
-                  <CircleUserRound className="w-5" />
-                </button>
-              </div>
-              {/* Dropdown Menu */}
-              {token && (
-                <ul
-                  tabIndex={0}
-                  className="menu menu-sm dropdown-content bg-base-100 rounded gap-2 w-36 py-2 px-3 text-gray-500 shadow"
-                >
-                  <NavLink to="/profile">
-                    <li className="cursor-pointer hover:text-black">
-                      Hồ sơ của tôi
-                    </li>
-                  </NavLink>
-                  <li
-                    onClick={() => navigate("/orders")}
-                    className="cursor-pointer hover:text-black"
-                  >
-                    Đơn hàng
-                  </li>
-                  <li
-                    onClick={logout}
-                    className="cursor-pointer hover:text-black"
-                  >
-                    Đăng xuất
-                  </li>
-                </ul>
-              )}
+          <div className="dropdown dropdown-end">
+            <div>
+              <button
+                tabIndex={0}
+                className="btn btn-ghost btn-circle cursor-pointer"
+              >
+                <CircleUserRound className="w-5" />
+              </button>
             </div>
-          )}
+            <ul
+              tabIndex={0}
+              className="menu menu-sm dropdown-content bg-base-100 rounded gap-2 w-36 py-2 px-3 text-gray-500 shadow"
+            >
+              {token && (
+                <NavLink to="/profile">
+                  <li className="cursor-pointer hover:text-black">
+                    Hồ sơ của tôi
+                  </li>
+                </NavLink>
+              )}
+              {token && (
+                <li
+                  onClick={() => navigate("/orders")}
+                  className="cursor-pointer hover:text-black"
+                >
+                  Đơn hàng
+                </li>
+              )}
+              {token && (
+                <li
+                  onClick={logout}
+                  className="cursor-pointer hover:text-black"
+                >
+                  Đăng xuất
+                </li>
+              )}
+              {!token && (
+                <NavLink to="/login">
+                  <li className="cursor-pointer hover:text-black">Đăng nhập</li>
+                </NavLink>
+              )}
+            </ul>
+          </div>
         </div>
         <img
           onClick={() => setVisible(true)}

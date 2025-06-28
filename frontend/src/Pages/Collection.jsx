@@ -9,7 +9,7 @@ import { useSearchParams } from "react-router-dom";
 const Collection = () => {
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const { search, showSearch, backendUrl } = useContext(ShopContext);
+  const { search, backendUrl } = useContext(ShopContext);
 
   const [showFilter, setShowFilter] = useState(false);
 
@@ -93,7 +93,7 @@ const Collection = () => {
     const fetchProducts = async () => {
       try {
         const response = await axios.get(
-          `${backendUrl}/api/product/filter?page=${currentPage}&limit=${itemsPerPage}&sort=${sortType}&category=${selectedCategory}&subCategory=${selectedSubCategory}`
+          `${backendUrl}/api/product/filter?page=${currentPage}&limit=${itemsPerPage}&sort=${sortType}&category=${selectedCategory}&subCategory=${selectedSubCategory}&keyword=${search}`
         );
         if (response.data.success) {
           setFilterProducts(response.data);
@@ -114,9 +114,9 @@ const Collection = () => {
     sortType,
     selectedCategory,
     selectedSubCategory,
+    search,
   ]);
 
-  console.log(selectedSubCategory);
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [currentPage]);

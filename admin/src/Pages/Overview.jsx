@@ -94,7 +94,6 @@ const Overview = ({ token }) => {
           }
         };
 
-        // Lấy sản phẩm nổi bật dựa trên số lượng bán
         const fetchTopSellingProducts = async () => {
           try {
             const response = await axios.get(
@@ -522,7 +521,7 @@ const Overview = ({ token }) => {
                             {product.name}
                           </p>
                           <p className="text-sm text-gray-600">
-                            {formatCurrency(product.new_price)}
+                            {formatCurrency(product.selling_price)}
                           </p>
                         </div>
                         <div className="text-right">
