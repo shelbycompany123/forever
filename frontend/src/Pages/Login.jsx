@@ -8,12 +8,18 @@ const Login = () => {
   const { token, setToken, navigate, backendUrl } = useContext(ShopContext);
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [email, setEmail] = useState("");
 
   const onSubmitHandler = async (event) => {
     event.preventDefault();
     try {
       if (currentState === "Đăng ký") {
+        if (password !== confirmPassword) {
+          toast.error("Mật khẩu nhập lại không khớp!");
+          return;
+        }
+
         const response = await axios.post(backendUrl + "/api/user/register", {
           name,
           email,
@@ -43,6 +49,14 @@ const Login = () => {
     } catch (error) {
       toast.error(error);
     }
+  };
+
+  const toggleState = (newState) => {
+    setCurrentState(newState);
+    setName("");
+    setEmail("");
+    setPassword("");
+    setConfirmPassword("");
   };
 
   useEffect(() => {
@@ -88,18 +102,25 @@ const Login = () => {
         placeholder="Mật khẩu"
         required
       />
+      {currentState === "Đăng ký" && (
+        <input
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          value={confirmPassword}
+          type="password"
+          className="w-full px-3 py-2 border border-gray-800"
+          placeholder="Nhập lại mật khẩu"
+          required
+        />
+      )}
       <div className="w-full flex justify-between text-sm mt-[-8px]">
         <p className="cursor-pointer">Quên mật khẩu?</p>
         {currentState === "Đăng nhập" ? (
-          <p
-            onClick={() => setCurrentState("Đăng ký")}
-            className="cursor-pointer"
-          >
+          <p onClick={() => toggleState("Đăng ký")} className="cursor-pointer">
             Tạo tài khoản
           </p>
         ) : (
           <p
-            onClick={() => setCurrentState("Đăng nhập")}
+            onClick={() => toggleState("Đăng nhập")}
             className="cursor-pointer"
           >
             Đăng nhập

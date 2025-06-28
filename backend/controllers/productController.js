@@ -109,7 +109,10 @@ const singleProduct = async (req, res) => {
 const getProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    const product = await productModel.findById(id);
+    const product = await productModel
+      .findById(id)
+      .populate("category", "name slug _id")
+      .populate("subCategory", "name slug _id");
     if (!product) {
       res.json({ success: false, message: "Không tìm thấy sản phẩm" });
     } else {
@@ -218,7 +221,14 @@ const updateProduct = async (req, res) => {
 
 const filterProducts = async (req, res) => {
   try {
-    const { category, subCategory, sort, page = 1, limit = 10 } = req.query;
+    const {
+      category,
+      subCategory,
+      sort,
+      page = 1,
+      limit = 10,
+      keyword,
+    } = req.query;
     const skip = (page - 1) * limit;
 
     let filter = {};
@@ -251,7 +261,10 @@ const filterProducts = async (req, res) => {
       }
     }
 
-    console.log(hasValidCategory, hasValidSubCategory);
+    if (keyword) {
+      filter.name = { $regex: keyword, $options: "i" };
+    }
+
     if (
       (category && !hasValidCategory) ||
       (subCategory && !hasValidSubCategory)
@@ -296,6 +309,43 @@ const filterProducts = async (req, res) => {
   }
 };
 
+const getSaleProducts = async (req, res) => {
+  try {
+    const products = await productModel.find({
+      promo_price: { $ne: null },
+      promo_start: { $lte: new Date() },
+      promo_end: { $gte: new Date() },
+    });
+    res.json({ success: true, products });
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, message: "Lỗi khi lấy sản phẩm giảm giá" });
+  }
+};
+
+const getRelatedProducts = async (req, res) => {
+  try {
+    const { productId } = req.query;
+    const product = await productModel
+      .findById(productId)
+      .populate("category", "name slug _id")
+      .populate("subCategory", "name slug _id");
+
+    const relatedProducts = await productModel
+      .find({
+        category: product.category._id,
+        subCategory: product.subCategory._id,
+      })
+      .limit(8)
+      .populate("category", "name slug _id")
+      .populate("subCategory", "name slug _id");
+    res.json({ success: true, products: relatedProducts });
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, message: "Lỗi khi lấy sản phẩm liên quan" });
+  }
+};
+
 export {
   addProduct,
   listProducts,
@@ -304,4 +354,6 @@ export {
   getProduct,
   updateProduct,
   filterProducts,
+  getSaleProducts,
+  getRelatedProducts,
 };

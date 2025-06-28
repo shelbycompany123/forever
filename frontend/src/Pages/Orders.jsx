@@ -37,7 +37,7 @@ const Orders = () => {
                 { headers: { token } }
               );
               if (ratingResponse.data.success) {
-                // Thêm đánh giá vào object với key là productId
+                console.log(ratingResponse.data.userRatings);
                 Object.assign(ratings, ratingResponse.data.userRatings);
               }
             } catch (error) {
@@ -54,6 +54,7 @@ const Orders = () => {
     }
   };
 
+  console.log(userRatings);
   useEffect(() => {
     loadOrderData();
   }, [token]);
@@ -228,7 +229,9 @@ const Orders = () => {
                       {order.status === "da_giao" &&
                         (() => {
                           const allRated = order.items.every(
-                            (item) => userRatings[item._id]
+                            (item) =>
+                              userRatings[item._id] &&
+                              userRatings[item._id].orderId === order._id
                           );
                           return (
                             <Link

@@ -65,17 +65,14 @@ const getTopSellingProducts = async (req, res) => {
     // Lấy thông tin chi tiết của các sản phẩm
     const topProducts = await Promise.all(
       sortedProducts.map(async ([productId, soldQuantity]) => {
-        const product = await productModel.findById(productId);
+        const product = await productModel
+          .findById(productId)
+          .populate("category", "name slug")
+          .populate("subCategory", "name slug");
         if (product) {
           return {
-            _id: product._id,
-            name: product.name,
-            new_price: product.new_price,
-            old_price: product.old_price,
-            image: product.image[0], // Lấy ảnh đầu tiên
-            soldQuantity: soldQuantity,
-            category: product.category,
-            subCategory: product.subCategory,
+            ...product._doc,
+            soldQuantity,
           };
         }
         return null;

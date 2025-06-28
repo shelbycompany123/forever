@@ -7,6 +7,8 @@ import {
   getProduct,
   updateProduct,
   filterProducts,
+  getSaleProducts,
+  getRelatedProducts,
 } from "../controllers/productController.js";
 import upload from "../middleware/multer.js";
 import adminAuth from "../middleware/adminAuth.js";
@@ -30,5 +32,7 @@ productRouter.put(
 );
 
 productRouter.get("/filter", filterProducts);
+productRouter.get("/sale", getSaleProducts);
+productRouter.get("/related", getRelatedProducts);
 
 export default productRouter;

@@ -190,9 +190,6 @@ const UpdateProduct = ({ token }) => {
       );
       if (response.data.success) {
         setCategory(response.data.categories);
-        if (response.data.categories.length > 0 && !selectedCategory) {
-          setSelectedCategory(response.data.categories[0]._id);
-        }
       } else {
         toast.error(response.data.message);
       }
@@ -209,9 +206,6 @@ const UpdateProduct = ({ token }) => {
       );
       if (response.data.success) {
         setSubCategory(response.data.subcategories);
-        if (response.data.subcategories.length > 0 && !selectedSubCategory) {
-          setSelectedSubCategory(response.data.subcategories[0]._id);
-        }
       } else {
         toast.error(response.data.message);
       }

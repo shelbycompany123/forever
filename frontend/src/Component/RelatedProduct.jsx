@@ -2,22 +2,21 @@ import React, { useContext, useEffect, useState } from "react";
 import { ShopContext } from "../Context/ShopContext";
 import Title from "../Component/Title";
 import Item from "./Item";
+import axios from "axios";
 
-const RelatedProduct = ({ category, subCategory }) => {
-  const { product_list } = useContext(ShopContext);
+const RelatedProduct = ({ productId }) => {
+  const { backendUrl } = useContext(ShopContext);
   const [related, setRelated] = useState([]);
 
   useEffect(() => {
-    if (product_list.length > 0) {
-      let productsCopy = product_list.slice();
-      productsCopy = productsCopy.filter((item) => category === item.category);
-      productsCopy = productsCopy.filter(
-        (item) => subCategory === item.subCategory
+    const fetchRelatedProducts = async () => {
+      const response = await axios.get(
+        backendUrl + `/api/product/related?productId=${productId}`
       );
-
-      setRelated(productsCopy.slice(0, 5));
-    }
-  }, [product_list, category, subCategory]);
+      setRelated(response.data.products);
+    };
+    fetchRelatedProducts();
+  }, [productId]);
 
   return (
     <div className="my-24">
@@ -26,7 +25,7 @@ const RelatedProduct = ({ category, subCategory }) => {
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 gap-y-6">
         {related.map((item, index) => {
-          return <Item key={index} id={item._id} data={item} />;
+          return <Item key={index} data={item} />;
         })}
       </div>
     </div>

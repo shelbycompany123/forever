@@ -53,12 +53,16 @@ const Item = ({ data }) => {
           <p className="text-base font-semibold text-black">
             {formatCurrency(getDisplayPrice(data))}
           </p>
-          {data?.original_price &&
-            data?.original_price > getDisplayPrice(data) && (
-              <p className="text-sm line-through text-gray-400">
-                {formatCurrency(data?.original_price)}
-              </p>
-            )}
+          {isPromoActive(data) && (
+            <p className="text-sm line-through text-gray-400">
+              {formatCurrency(data?.selling_price)}
+            </p>
+          )}
+        </div>
+        <div className="flex items-center gap-2 mt-1">
+          {data?.soldQuantity && (
+            <p className="text-sm text-gray-600">Đã bán {data?.soldQuantity}</p>
+          )}
         </div>
       </div>
     </Link>

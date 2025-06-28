@@ -1,12 +1,28 @@
-import React, { useContext } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import Title from "./Title";
 import Item from "./Item";
 import { ShopContext } from "../Context/ShopContext";
+import axios from "axios";
 
 const BestSeller = () => {
-  const { product_list } = useContext(ShopContext);
-  const bestSeller = product_list.filter((product) => product.bestseller);
-
+  const [bestSeller, setBestSeller] = useState([]);
+  const { backendUrl } = useContext(ShopContext);
+  useEffect(() => {
+    const fetchTopSellingProducts = async () => {
+      try {
+        const response = await axios.get(
+          backendUrl + "/api/overview/top-selling-products"
+        );
+        if (response.data.success) {
+          setBestSeller(response.data.topSellingProducts);
+        }
+      } catch (error) {
+        console.log(error.message);
+      }
+    };
+    fetchTopSellingProducts();
+  }, [backendUrl]);
+  console.log(bestSeller);
   return (
     <div className="my-10">
       <div className="text-center py-8 text-3xl">
